@@ -1,0 +1,25 @@
+# Archivos de caché y compilados de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Entornos virtuales
+# Nunca subas tu entorno virtual a GitHub
+venv/
+env/
+.venv/
+.env/
+
+# Archivo de variables de entorno
+# Aquí guardaremos las API keys y otros secretos. ¡NUNCA debe estar en GitHub!
+.env
+*.env
+
+# Carpetas de configuración de IDEs y editores
+.vscode/
+.idea/
+
+# Archivos de sistema operativo
+.DS_Store
+Thumbs.db
