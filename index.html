@@ -5,107 +5,61 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Borí Cano Chat</title>
 
-    <!-- Estilos -->
     <link rel="stylesheet" href="index.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet" />
   </head>
 
   <body>
     <!-- Header -->
     <header class="app-header">
       <div class="header-left">
-        <button
-          id="play-pause-button"
-          class="audio-button"
-          aria-label="Reproducir música"
-        ></button>
-
-        <img
-          src="https://static.wixstatic.com/media/86b1c8_2d816491cf534b53b2b2bac9ac0a558f~mv2.png"
-          alt="Logo de Borí Cano"
-          class="header-logo"
-        />
+        <button id="play-pause-button" class="audio-button" aria-label="Reproducir música"></button>
+        <img src="https://static.wixstatic.com/media/86b1c8_2d816491cf534b53b2b2bac9ac0a558f~mv2.png" alt="Logo de Borí Cano" class="header-logo" />
       </div>
-
       <div class="title-container">
         <h1>Borí Cano Chat</h1>
         <p>¡Wepa panita!</p>
       </div>
     </header>
 
-    <!-- Contenedor para karaoke -->
+    <!-- Karaoke -->
     <div id="lyrics-container"></div>
 
     <main>
-      <!-- ElevenLabs Conversational AI Widget -->
+      <!-- ElevenLabs widget -->
       <elevenlabs-convai agent-id="agent_0301k2g45tvaere8gnrgvbj9f89k"></elevenlabs-convai>
-      <script
-        src="https://unpkg.com/@elevenlabs/convai-widget-embed"
-        async
-        type="text/javascript"
-      ></script>
+      <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
 
-      <!-- Client Tools: modal embebido (sin popups, con deep-links móvil) -->
+      <!-- Client Tool: SOLO modal embebido (sin popups) -->
       <script>
         (() => {
-          // --------- Config por defecto ----------
-          const DEFAULT_LAT = 18.340183178224542;
-          const DEFAULT_LNG = -65.61933532856209;
-          const DEFAULT_ZOOM = 18;
-          const DEFAULT_BASEMAP = "satellite";
+          // --- Constantes del mapa ---
+          const LAT = 18.340183178224542;
+          const LNG = -65.61933532856209;
+          const ZOOM = 18;
+          const BASEMAP = "satellite"; // "satellite" | "roadmap"
 
-          // Detección simple de plataforma
-          const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-          const isAndroid = /Android/.test(navigator.userAgent);
+          // Plataformas
+          const UA = navigator.userAgent || "";
+          const isIOS = /iPad|iPhone|iPod/.test(UA);
+          const isAndroid = /Android/.test(UA);
 
-          // URL para abrir fuera (web)
-          const buildExternalWeb = ({
-            lat,
-            lng,
-            zoom = DEFAULT_ZOOM,
-            basemap = DEFAULT_BASEMAP,
-          }) =>
-            `https://www.google.com/maps/@?api=1&map_action=map&center=${lat}%2C${lng}&zoom=${zoom}&basemap=${encodeURIComponent(
-              basemap
-            )}`;
+          // URLs
+          const embedUrl = (() => {
+            const t = BASEMAP === "satellite" ? "k" : "m";
+            return `https://www.google.com/maps?q=${LAT},${LNG}&t=${t}&z=${ZOOM}&output=embed&hl=es`;
+          })();
 
-          // Deep links (mejor UX en móvil)
-          const buildDeepLink = ({ lat, lng, zoom = DEFAULT_ZOOM }) => {
-            if (isIOS) return `comgooglemaps://?center=${lat},${lng}&zoom=${zoom}`;
-            if (isAndroid)
-              return `geo:${lat},${lng}?q=${lat},${lng}(${encodeURIComponent(
-                "Isleta Marina"
-              )})&z=${zoom}`;
-            return null;
-          };
+          const universalWeb = `https://maps.google.com/?q=${LAT},${LNG}&z=${ZOOM}`;
+          const gmapsApp    = `comgooglemaps://?q=${LAT},${LNG}&center=${LAT},${LNG}&zoom=${ZOOM}`;
+          const appleMaps   = `maps://?q=${LAT},${LNG}&z=${ZOOM}`;
+          const geoAndroid  = `geo:${LAT},${LNG}?q=${LAT},${LNG}(Isleta%20Marina)&z=${ZOOM}`;
 
-          // URL para <iframe> embebido (no requiere API key)
-          const buildEmbed = ({
-            lat,
-            lng,
-            zoom = DEFAULT_ZOOM,
-            basemap = DEFAULT_BASEMAP,
-          }) => {
-            const t = basemap === "satellite" ? "k" : "m";
-            return `https://www.google.com/maps?q=${lat},${lng}&t=${t}&z=${zoom}&output=embed&hl=es`;
-          };
-
-          // Crea (o reutiliza) un <dialog> con iframe
-          function openMapDialog({
-            lat = DEFAULT_LAT,
-            lng = DEFAULT_LNG,
-            zoom = DEFAULT_ZOOM,
-            basemap = DEFAULT_BASEMAP,
-            title = "Mapa – Isleta Marina",
-          }) {
-            // Fallback por si <dialog> no existe
+          // Crea o reutiliza <dialog> (sin abrir pestañas)
+          function openMapDialog() {
             const supportsDialog = typeof HTMLDialogElement !== "undefined";
-
             let dlg = document.getElementById("map-dialog");
             let overlay;
 
@@ -117,6 +71,7 @@
                   "width:min(960px,96vw);height:min(80vh,720px);border:none;border-radius:14px;padding:0;overflow:hidden;background:#0b0b15;";
                 document.body.appendChild(dlg);
               } else {
+                // Fallback overlay si <dialog> no existe
                 overlay = document.createElement("div");
                 overlay.id = "map-overlay";
                 overlay.style.cssText =
@@ -138,10 +93,12 @@
               header.style.cssText =
                 "display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#141428;color:#fff;font-family:Poppins,system-ui,sans-serif";
               header.innerHTML = `
-                <div style="font-weight:700;font-size:14px">${title}</div>
-                <div style="display:flex;gap:8px;">
-                  <a id="map-open-native" style="text-decoration:none;background:#5F2EEA;color:#fff;padding:8px 10px;border-radius:10px;font-size:12px">Abrir en Maps</a>
-                  <button id="map-close" style="background:#2a2a4a;color:#fff;border:0;padding:8px 10px;border-radius:10px;cursor:pointer;font-size:12px">Cerrar</button>
+                <div style="font-weight:700;font-size:14px">Mapa – Isleta Marina</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <a id="btn-open-gmaps"  style="text-decoration:none;background:#5F2EEA;color:#fff;padding:8px 10px;border-radius:10px;font-size:12px">Abrir en Google Maps</a>
+                  ${isIOS ? '<a id="btn-open-apple"  style="text-decoration:none;background:#2a7; color:#fff;padding:8px 10px;border-radius:10px;font-size:12px">Abrir en Apple Maps</a>' : ''}
+                  ${isAndroid ? '<a id="btn-open-geo"    style="text-decoration:none;background:#2a7; color:#fff;padding:8px 10px;border-radius:10px;font-size:12px">Abrir en app de Mapas</a>' : ''}
+                  <button id="map-close"  style="background:#2a2a4a;color:#fff;border:0;padding:8px 10px;border-radius:10px;cursor:pointer;font-size:12px">Cerrar</button>
                 </div>
               `;
 
@@ -154,75 +111,58 @@
               dlg.appendChild(header);
               dlg.appendChild(iframe);
 
+              // Cerrar
               header.querySelector("#map-close").onclick = () => {
                 if (supportsDialog) dlg.close("user");
                 else document.getElementById("map-overlay")?.remove();
               };
+
+              // Deep-links: SIEMPRE requieren toque del usuario (no programático)
+              const $gm = header.querySelector("#btn-open-gmaps");
+              $gm.href = universalWeb;   // universal link que suele ofrecer abrir app
+              $gm.target = "_blank";
+              $gm.rel = "noopener noreferrer";
+
+              if (isIOS) {
+                const $ap = header.querySelector("#btn-open-apple");
+                $ap.href = appleMaps;     // Apple Maps app
+                $ap.target = "_self";
+              }
+              if (isAndroid) {
+                const $geo = header.querySelector("#btn-open-geo");
+                $geo.href = geoAndroid;   // geo: intent para app nativa
+                $geo.target = "_self";
+              }
             }
 
-            const embedUrl = buildEmbed({ lat, lng, zoom, basemap });
-            const externalUrl = buildExternalWeb({ lat, lng, zoom, basemap });
-            const deep = buildDeepLink({ lat, lng, zoom }) || externalUrl;
-
             dlg.querySelector("#map-iframe").src = embedUrl;
-
-            const a = dlg.querySelector("#map-open-native");
-            a.href = deep;
-            a.target = deep.startsWith("http") ? "_blank" : "_self";
-            a.rel = "noopener noreferrer";
-
             if (typeof dlg.showModal === "function" && !dlg.open) dlg.showModal();
             else if (document.getElementById("map-overlay"))
               document.getElementById("map-overlay").style.display = "flex";
 
-            return { ok: true, embedUrl, externalUrl, deep };
+            return { ok: true };
           }
 
-          // --- Debug: ver cada intento de tool call ---
+          // Debug
           window.addEventListener("elevenlabs-convai:call", (e) => {
             console.log("[convai:call] detail =", e.detail);
           });
 
-          // --- Registrar client tools (evento en window) ---
+          // Registrar UN solo client tool para evitar ambigüedades del agente
           window.addEventListener("elevenlabs-convai:call", (event) => {
             const cfg = event.detail?.config || {};
             cfg.clientTools = {
-              ...(cfg.clientTools || {}),
-
-              // A) Diagnóstico
-              logMessage: ({ message }) => {
-                console.log("[logMessage]", message);
-                return { ok: true, echo: message };
-              },
-
-              // B) Mapa fijo
-              openIsletaMap: () => openMapDialog({}),
-
-              // C) Mapa dinámico: acepta { url } o { lat,lng,zoom,basemap }
-              showMap: ({ url, lat, lng, zoom, basemap }) => {
-                if (url) {
-                  const m = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+),(\d+)z/);
-                  if (m) {
-                    lat = parseFloat(m[1]);
-                    lng = parseFloat(m[2]);
-                    zoom = parseInt(m[3], 10);
-                  }
-                }
-                return openMapDialog({ lat, lng, zoom, basemap });
-              },
+              // ✅ ÚNICO TOOL: abre modal embebido (sin popups)
+              openIsletaMapEmbed: () => openMapDialog()
             };
-            event.detail.config = cfg; // reinyecta la config
+            event.detail.config = cfg;
           });
         })();
       </script>
     </main>
 
-    <!-- Audio de fondo -->
-    <audio
-      id="background-audio"
-      src="https://static.wixstatic.com/mp3/86b1c8_a1bd589ba7e547dc8a7a4cd761c40135.mp3"
-      preload="auto"
-    ></audio>
+    <!-- Audio -->
+    <audio id="background-audio" src="https://static.wixstatic.com/mp3/86b1c8_a1bd589ba7e547dc8a7a4cd761c40135.mp3" preload="auto"></audio>
 
     <!-- Karaoke + Play/Pause -->
     <script>
@@ -248,12 +188,7 @@
           { stanza: 4, time: 27.2, text: "Aquí el Borí Cano con la medalla siempre en mano," },
           { stanza: 4, time: 31.09, text: "en el ferry hacia Isleta llegando a Vista Pelicano." },
           { stanza: 4, time: 33.16, text: "El sabor de la isla, la vibra que nunca engaña," },
-          {
-            stanza: 4,
-            time: 35.19,
-            text:
-              "¡Borí Cano con la Medalla, orgullo borincano y no es una campaña!",
-          },
+          { stanza: 4, time: 35.19, text: "¡Borí Cano con la Medalla, orgullo borincano y no es una campaña!" },
           { stanza: 5, time: 48.02, text: "Llegamos a Fajardo, Harbor Café encendío'," },
           { stanza: 5, time: 50.14, text: "mofongo en la mesa, el corillo prendío'." },
           { stanza: 5, time: 53.05, text: "Risa tras risa, botella tras botella," },
@@ -261,12 +196,7 @@
           { stanza: 6, time: 62.18, text: "Aquí el Borí Cano con la medalla siempre en mano," },
           { stanza: 6, time: 65.15, text: "hacia la playa de Icacos comienza el jangueo temprano." },
           { stanza: 6, time: 69.23, text: "El sabor de la isla, la vibra que nunca engaña," },
-          {
-            stanza: 6,
-            time: 73.16,
-            text:
-              "¡Borí Cano con la Medalla, orgullo borincano y no es una campaña!",
-          },
+          { stanza: 6, time: 73.16, text: "¡Borí Cano con la Medalla, orgullo borincano y no es una campaña!" },
           { stanza: 7, time: 79.06, text: "La música sube, la islita reventá'," },
           { stanza: 7, time: 81.18, text: "dembow en las bocinas, la gente conectá'." },
           { stanza: 7, time: 83.02, text: "Yo, un pelícano con flow, represento mi bandera," },
@@ -274,71 +204,49 @@
           { stanza: 8, time: 97.2, text: "Aquí el Borí Cano con la Medalla siempre en mano," },
           { stanza: 8, time: 100.17, text: "desde Isleta Marina hasta el confín borincano." },
           { stanza: 8, time: 103.22, text: "El sabor de la isla, la vibra que nunca engaña," },
-          {
-            stanza: 8,
-            time: 107.22,
-            text:
-              "¡Borí Cano con la Medalla, orgullo de Borinquen en las entrañas!",
-          },
+          { stanza: 8, time: 107.22, text: "¡Borí Cano con la Medalla, orgullo de Borinquen en las entrañas!" },
           { stanza: 9, time: 112.0, text: "" },
         ];
 
         let currentLyricIndex = -1;
 
         function updateLyrics() {
-          if (!audio || !lyricsContainer) return;
           const currentTime = audio.currentTime;
-
           let newLyricIndex = -1;
           for (let i = 0; i < lyricsData.length; i++) {
             if (currentTime >= lyricsData[i].time) newLyricIndex = i;
             else break;
           }
-
           if (newLyricIndex !== currentLyricIndex) {
             currentLyricIndex = newLyricIndex;
             lyricsContainer.innerHTML = "";
             if (currentLyricIndex < 0) return;
 
-            const createLineEl = (line) => {
+            const make = (line, active) => {
               const p = document.createElement("p");
               p.textContent = line.text;
-              p.classList.add("lyric-line");
+              p.className = "lyric-line" + (active ? " active" : "");
               return p;
             };
-
-            const currentLine = lyricsData[currentLyricIndex];
-            if (currentLine && currentLine.text) {
-              const currentLineEl = createLineEl(currentLine);
-              currentLineEl.classList.add("active");
-              lyricsContainer.appendChild(currentLineEl);
-
-              const nextLine = lyricsData[currentLyricIndex + 1];
-              if (
-                nextLine &&
-                nextLine.stanza === currentLine.stanza &&
-                nextLine.text
-              ) {
-                const nextLineEl = createLineEl(nextLine);
-                lyricsContainer.appendChild(nextLineEl);
-              }
+            const cur = lyricsData[currentLyricIndex];
+            if (cur && cur.text) {
+              lyricsContainer.appendChild(make(cur, true));
+              const next = lyricsData[currentLyricIndex + 1];
+              if (next && next.stanza === cur.stanza && next.text)
+                lyricsContainer.appendChild(make(next, false));
             }
           }
         }
 
         if (playPauseButton && audio && logo && lyricsContainer) {
-          const playIcon =
-            '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
-          const pauseIcon =
-            '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+          const playIcon  = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+          const pauseIcon = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
 
           playPauseButton.innerHTML = playIcon;
 
           const togglePlayPause = () => {
             if (audio.paused) {
-              audio
-                .play()
-                .catch((err) => console.error("La reproducción de audio falló:", err));
+              audio.play().catch(err => console.error("Audio error:", err));
               playPauseButton.innerHTML = pauseIcon;
               playPauseButton.classList.add("playing");
               playPauseButton.setAttribute("aria-label", "Pausar música");
@@ -356,7 +264,6 @@
 
           playPauseButton.addEventListener("click", togglePlayPause);
           audio.addEventListener("timeupdate", updateLyrics);
-
           audio.addEventListener("ended", () => {
             playPauseButton.innerHTML = playIcon;
             playPauseButton.classList.remove("playing");
@@ -371,7 +278,6 @@
       })();
     </script>
 
-    <!-- Versión -->
-    <div class="version-label">V3.7</div>
+    <div class="version-label">V3.9.0</div>
   </body>
 </html>
