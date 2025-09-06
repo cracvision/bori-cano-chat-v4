@@ -8,57 +8,89 @@
     <link rel="stylesheet" href="index.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
   </head>
 
   <body>
     <!-- Header -->
     <header class="app-header">
       <div class="header-left">
-        <button id="play-pause-button" class="audio-button" aria-label="Reproducir música"></button>
-        <img src="https://static.wixstatic.com/media/86b1c8_2d816491cf534b53b2b2bac9ac0a558f~mv2.png" alt="Logo de Borí Cano" class="header-logo" />
+        <button
+          id="play-pause-button"
+          class="audio-button"
+          aria-label="Reproducir música"
+        ></button>
+
+        <img
+          src="https://static.wixstatic.com/media/86b1c8_2d816491cf534b53b2b2bac9ac0a558f~mv2.png"
+          alt="Logo de Borí Cano"
+          class="header-logo"
+        />
       </div>
+
       <div class="title-container">
         <h1>Borí Cano Chat</h1>
         <p>¡Wepa panita!</p>
       </div>
     </header>
 
-    <!-- Karaoke -->
+    <!-- Contenedor para karaoke -->
     <div id="lyrics-container"></div>
 
     <main>
-      <!-- ElevenLabs widget -->
+      <!-- ElevenLabs Conversational AI Widget -->
       <elevenlabs-convai agent-id="agent_0301k2g45tvaere8gnrgvbj9f89k"></elevenlabs-convai>
-      <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
+      <script
+        src="https://unpkg.com/@elevenlabs/convai-widget-embed"
+        async
+        type="text/javascript"
+      ></script>
 
-      <!-- Client Tool: SOLO modal embebido (sin popups) -->
+      <!-- Client Tools: mapa embebido + imagen embebida (sin popups) -->
       <script>
         (() => {
-          // --- Constantes del mapa ---
-          const LAT = 18.340183178224542;
-          const LNG = -65.61933532856209;
-          const ZOOM = 18;
-          const BASEMAP = "satellite"; // "satellite" | "roadmap"
+          /* ========================
+           *  MAPA EMBEBIDO (modal)
+           * ======================== */
+          const DEFAULT_LAT = 18.340183178224542;
+          const DEFAULT_LNG = -65.61933532856209;
+          const DEFAULT_ZOOM = 18;
+          const DEFAULT_BASEMAP = "satellite";
 
-          // Plataformas
           const UA = navigator.userAgent || "";
           const isIOS = /iPad|iPhone|iPod/.test(UA);
           const isAndroid = /Android/.test(UA);
 
-          // URLs
-          const embedUrl = (() => {
-            const t = BASEMAP === "satellite" ? "k" : "m";
-            return `https://www.google.com/maps?q=${LAT},${LNG}&t=${t}&z=${ZOOM}&output=embed&hl=es`;
-          })();
+          const buildEmbedMap = ({
+            lat = DEFAULT_LAT,
+            lng = DEFAULT_LNG,
+            zoom = DEFAULT_ZOOM,
+            basemap = DEFAULT_BASEMAP,
+          } = {}) => {
+            const t = basemap === "satellite" ? "k" : "m";
+            return `https://www.google.com/maps?q=${lat},${lng}&t=${t}&z=${zoom}&output=embed&hl=es`;
+          };
 
-          const universalWeb = `https://maps.google.com/?q=${LAT},${LNG}&z=${ZOOM}`;
-          const gmapsApp    = `comgooglemaps://?q=${LAT},${LNG}&center=${LAT},${LNG}&zoom=${ZOOM}`;
-          const appleMaps   = `maps://?q=${LAT},${LNG}&z=${ZOOM}`;
-          const geoAndroid  = `geo:${LAT},${LNG}?q=${LAT},${LNG}(Isleta%20Marina)&z=${ZOOM}`;
+          const buildExternalMap = ({
+            lat = DEFAULT_LAT,
+            lng = DEFAULT_LNG,
+            zoom = DEFAULT_ZOOM,
+            basemap = DEFAULT_BASEMAP,
+          } = {}) =>
+            `https://www.google.com/maps/@?api=1&map_action=map&center=${lat}%2C${lng}&zoom=${zoom}&basemap=${encodeURIComponent(
+              basemap
+            )}`;
 
-          // Crea o reutiliza <dialog> (sin abrir pestañas)
-          function openMapDialog() {
+          function openMapDialog({
+            lat = DEFAULT_LAT,
+            lng = DEFAULT_LNG,
+            zoom = DEFAULT_ZOOM,
+            basemap = DEFAULT_BASEMAP,
+            title = "Mapa – Isleta Marina",
+          } = {}) {
             const supportsDialog = typeof HTMLDialogElement !== "undefined";
             let dlg = document.getElementById("map-dialog");
             let overlay;
@@ -71,7 +103,6 @@
                   "width:min(960px,96vw);height:min(80vh,720px);border:none;border-radius:14px;padding:0;overflow:hidden;background:#0b0b15;";
                 document.body.appendChild(dlg);
               } else {
-                // Fallback overlay si <dialog> no existe
                 overlay = document.createElement("div");
                 overlay.id = "map-overlay";
                 overlay.style.cssText =
@@ -93,12 +124,10 @@
               header.style.cssText =
                 "display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#141428;color:#fff;font-family:Poppins,system-ui,sans-serif";
               header.innerHTML = `
-                <div style="font-weight:700;font-size:14px">Mapa – Isleta Marina</div>
+                <div style="font-weight:700;font-size:14px">${title}</div>
                 <div style="display:flex;gap:8px;flex-wrap:wrap">
-                  <a id="btn-open-gmaps"  style="text-decoration:none;background:#5F2EEA;color:#fff;padding:8px 10px;border-radius:10px;font-size:12px">Abrir en Google Maps</a>
-                  ${isIOS ? '<a id="btn-open-apple"  style="text-decoration:none;background:#2a7; color:#fff;padding:8px 10px;border-radius:10px;font-size:12px">Abrir en Apple Maps</a>' : ''}
-                  ${isAndroid ? '<a id="btn-open-geo"    style="text-decoration:none;background:#2a7; color:#fff;padding:8px 10px;border-radius:10px;font-size:12px">Abrir en app de Mapas</a>' : ''}
-                  <button id="map-close"  style="background:#2a2a4a;color:#fff;border:0;padding:8px 10px;border-radius:10px;cursor:pointer;font-size:12px">Cerrar</button>
+                  <a id="btn-map-open" style="text-decoration:none;background:#5F2EEA;color:#fff;padding:8px 10px;border-radius:10px;font-size:12px">Abrir en Google Maps</a>
+                  <button id="map-close" style="background:#2a2a4a;color:#fff;border:0;padding:8px 10px;border-radius:10px;cursor:pointer;font-size:12px">Cerrar</button>
                 </div>
               `;
 
@@ -111,31 +140,27 @@
               dlg.appendChild(header);
               dlg.appendChild(iframe);
 
-              // Cerrar
               header.querySelector("#map-close").onclick = () => {
                 if (supportsDialog) dlg.close("user");
                 else document.getElementById("map-overlay")?.remove();
               };
 
-              // Deep-links: SIEMPRE requieren toque del usuario (no programático)
-              const $gm = header.querySelector("#btn-open-gmaps");
-              $gm.href = universalWeb;   // universal link que suele ofrecer abrir app
-              $gm.target = "_blank";
-              $gm.rel = "noopener noreferrer";
-
-              if (isIOS) {
-                const $ap = header.querySelector("#btn-open-apple");
-                $ap.href = appleMaps;     // Apple Maps app
-                $ap.target = "_self";
-              }
-              if (isAndroid) {
-                const $geo = header.querySelector("#btn-open-geo");
-                $geo.href = geoAndroid;   // geo: intent para app nativa
-                $geo.target = "_self";
-              }
+              const $open = header.querySelector("#btn-map-open");
+              $open.href = buildExternalMap({});
+              $open.target = "_blank";
+              $open.rel = "noopener noreferrer";
             }
 
-            dlg.querySelector("#map-iframe").src = embedUrl;
+            dlg.querySelector("#map-iframe").src = buildEmbedMap({
+              lat,
+              lng,
+              zoom,
+              basemap,
+            });
+
+            const a = dlg.querySelector("#btn-map-open");
+            a.href = buildExternalMap({ lat, lng, zoom, basemap });
+
             if (typeof dlg.showModal === "function" && !dlg.open) dlg.showModal();
             else if (document.getElementById("map-overlay"))
               document.getElementById("map-overlay").style.display = "flex";
@@ -143,17 +168,120 @@
             return { ok: true };
           }
 
-          // Debug
+          /* ========================
+           *  IMAGEN EMBEBIDA (modal)
+           * ======================== */
+          function openImageDialog({
+            url,
+            title = "Vista desde el balcón",
+            caption = "",
+            alt = "Imagen",
+          } = {}) {
+            if (!url || typeof url !== "string")
+              return { ok: false, error: "Missing image URL" };
+
+            const supportsDialog = typeof HTMLDialogElement !== "undefined";
+            let dlg = document.getElementById("img-dialog");
+            let overlay;
+
+            if (!dlg) {
+              if (supportsDialog) {
+                dlg = document.createElement("dialog");
+                dlg.id = "img-dialog";
+                dlg.style.cssText =
+                  "width:min(960px,96vw);height:min(80vh,720px);border:none;border-radius:14px;padding:0;overflow:hidden;background:#0b0b15;";
+                document.body.appendChild(dlg);
+              } else {
+                overlay = document.createElement("div");
+                overlay.id = "img-overlay";
+                overlay.style.cssText =
+                  "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;";
+                document.body.appendChild(overlay);
+
+                dlg = document.createElement("div");
+                dlg.id = "img-dialog";
+                dlg.style.cssText =
+                  "width:min(960px,96vw);height:min(80vh,720px);border:none;border-radius:14px;overflow:hidden;background:#0b0b15;box-shadow:0 10px 40px rgba(0,0,0,.35);";
+                overlay.appendChild(dlg);
+
+                overlay.addEventListener("click", (e) => {
+                  if (e.target === overlay) overlay.remove();
+                });
+              }
+
+              const header = document.createElement("div");
+              header.style.cssText =
+                "display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#141428;color:#fff;font-family:Poppins,system-ui,sans-serif";
+              header.innerHTML = `
+                <div id="img-title" style="font-weight:700;font-size:14px">${title}</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <a id="img-open-new" style="text-decoration:none;background:#5F2EEA;color:#fff;padding:8px 10px;border-radius:10px;font-size:12px">Abrir imagen</a>
+                  <button id="img-close" style="background:#2a2a4a;color:#fff;border:0;padding:8px 10px;border-radius:10px;cursor:pointer;font-size:12px">Cerrar</button>
+                </div>
+              `;
+
+              const wrap = document.createElement("div");
+              wrap.style.cssText =
+                "display:flex;align-items:center;justify-content:center;width:100%;height:calc(100% - 76px);background:#0b0b15;";
+
+              const img = document.createElement("img");
+              img.id = "img-view";
+              img.alt = alt;
+              img.style.cssText =
+                "max-width:100%;max-height:100%;object-fit:contain;display:block;";
+
+              const cap = document.createElement("div");
+              cap.id = "img-caption";
+              cap.style.cssText =
+                "padding:8px 12px;background:#0f0f1f;color:#cfd2ff;font-size:12px;font-family:Poppins,system-ui,sans-serif;";
+
+              wrap.appendChild(img);
+
+              dlg.appendChild(header);
+              dlg.appendChild(wrap);
+              dlg.appendChild(cap);
+
+              // Eventos
+              header.querySelector("#img-close").onclick = () => {
+                if (supportsDialog) dlg.close("user");
+                else document.getElementById("img-overlay")?.remove();
+              };
+              const a = header.querySelector("#img-open-new");
+              a.target = "_blank";
+              a.rel = "noopener noreferrer";
+            }
+
+            // Set content
+            dlg.querySelector("#img-title").textContent = title;
+            dlg.querySelector("#img-view").src = url;
+            dlg.querySelector("#img-view").alt = alt || title;
+            dlg.querySelector("#img-caption").textContent = caption || "";
+            dlg.querySelector("#img-open-new").href = url;
+
+            // Mostrar
+            if (typeof dlg.showModal === "function" && !dlg.open) dlg.showModal();
+            else if (document.getElementById("img-overlay"))
+              document.getElementById("img-overlay").style.display = "flex";
+
+            return { ok: true, url };
+          }
+
+          /* ========================
+           *  Registrar Client Tools
+           * ======================== */
           window.addEventListener("elevenlabs-convai:call", (e) => {
             console.log("[convai:call] detail =", e.detail);
           });
 
-          // Registrar UN solo client tool para evitar ambigüedades del agente
           window.addEventListener("elevenlabs-convai:call", (event) => {
             const cfg = event.detail?.config || {};
             cfg.clientTools = {
-              // ✅ ÚNICO TOOL: abre modal embebido (sin popups)
-              openIsletaMapEmbed: () => openMapDialog()
+              ...(cfg.clientTools || {}),
+              // Mapa fijo
+              openIsletaMapEmbed: () => openMapDialog({}),
+              // Imagen embebida
+              showImageModal: ({ url, title, caption }) =>
+                openImageDialog({ url, title, caption }),
             };
             event.detail.config = cfg;
           });
@@ -161,8 +289,12 @@
       </script>
     </main>
 
-    <!-- Audio -->
-    <audio id="background-audio" src="https://static.wixstatic.com/mp3/86b1c8_a1bd589ba7e547dc8a7a4cd761c40135.mp3" preload="auto"></audio>
+    <!-- Audio de fondo -->
+    <audio
+      id="background-audio"
+      src="https://static.wixstatic.com/mp3/86b1c8_a1bd589ba7e547dc8a7a4cd761c40135.mp3"
+      preload="auto"
+    ></audio>
 
     <!-- Karaoke + Play/Pause -->
     <script>
@@ -239,14 +371,18 @@
         }
 
         if (playPauseButton && audio && logo && lyricsContainer) {
-          const playIcon  = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
-          const pauseIcon = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+          const playIcon =
+            '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+          const pauseIcon =
+            '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
 
           playPauseButton.innerHTML = playIcon;
 
           const togglePlayPause = () => {
             if (audio.paused) {
-              audio.play().catch(err => console.error("Audio error:", err));
+              audio
+                .play()
+                .catch((err) => console.error("Audio error:", err));
               playPauseButton.innerHTML = pauseIcon;
               playPauseButton.classList.add("playing");
               playPauseButton.setAttribute("aria-label", "Pausar música");
@@ -278,6 +414,6 @@
       })();
     </script>
 
-    <div class="version-label">V3.3.0</div>
+    <div class="version-label">V3.7</div>
   </body>
 </html>
