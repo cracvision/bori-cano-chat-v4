@@ -1,161 +1,110 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Borí Cano Chat</title>
-  <link rel="stylesheet" href="index.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
-  <!-- Script de ElevenLabs correcto para widget público -->
-  <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
-</head>
-<body>
-  <div class="app-header">
-    <div class="header-left">
-      <img class="header-logo" src="https://static.wixstatic.com/media/86b1c8_db2a61ccfc33487cadc257663f491523~mv2.png" alt="Borí Cano Logo">
-      <button id="play-pause-button" class="audio-button" aria-label="Reproducir música"></button>
-    </div>
-    <h1>Borí Cano Chat</h1>
-    <p>¡Wepa panita!</p>
-  </div>
-  <audio id="background-audio" src="boricano-song.mp3"></audio> <!-- Ajusta src real, e.g., './boricano-song.mp3' si en repo -->
-  <div id="lyrics-container"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Borí Cano Chat</title>
+    <link rel="stylesheet" href="index.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <header class="app-header">
+      <h1>Borí Cano Chat</h1>
+      <p>¡Wepa panita!</p>
+    </header>
 
-  <!-- Widget ElevenLabs como custom element (para agente público) -->
-  <elevenlabs-convai agent-id="iYd2p1H5s0lWOpN6dX0V"></elevenlabs-convai>
+    <main>
+      <!-- ElevenLabs Conversational AI Widget -->
+      <elevenlabs-convai agent-id="agent_0301k2g45tvaere8gnrgvbj9f89k"></elevenlabs-convai>
+      <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
 
-  <!-- Código JS adaptado, con lyricsData completo (no truncado) -->
-  <script>
-    const playPauseButton = document.getElementById('play-pause-button');
-    const audio = document.getElementById('background-audio');
-    const logo = document.querySelector('.header-logo');
-    const lyricsContainer = document.getElementById('lyrics-container');
+      <!-- Client Tool: showMap (Isleta Marina, vista satélite, popup + fallback) -->
+      <script>
+        (function () {
+          const COORDS = "18.340183178224542,-65.61933532856209"; // Isleta Marina
+          const ZOOM = "18z";
 
-    // lyricsData completo (todas estrofas y timings para efecto karaoke intacto)
-    const lyricsData = [
-      // Stanza 0: Intro
-      { stanza: 0, time: 0.16, text: "Desde el balcón de Vista Pelícano," },
-      { stanza: 0, time: 1.16, text: "mirando el mar azulito," },
-      { stanza: 0, time: 3.03, text: "llenando la neverita desde bien tempranito." },
-      { stanza: 0, time: 5.16, text: "Este vacilón tiene nombre y apellido." },
+          function attachShowMapHandler() {
+            const widget = document.querySelector('elevenlabs-convai');
+            if (!widget) return setTimeout(attachShowMapHandler, 60);
 
-      // Stanza 1: Verso 1
-      { stanza: 1, time: 9.03, text: "Yo soy Borí Cano. Aterrizo en la Marina" },
-      { stanza: 1, time: 11.22, text: "con el ferry cruzando, la brisa fresca no termina." },
-      { stanza: 1, time: 13.04, text: "El sol pega duro por alante y por atrás." },
+            // Crea un mini-modal para desbloquear con click si el popup es bloqueado
+            function ensureMapModal(url) {
+              let modal = document.getElementById('map-modal');
+              if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'map-modal';
+                Object.assign(modal.style, {
+                  position: 'fixed',
+                  right: '16px',
+                  bottom: '16px',
+                  background: '#fff',
+                  border: '1px solid #E4DEFF',
+                  borderRadius: '12px',
+                  boxShadow: '0 8px 30px rgba(0,0,0,.12)',
+                  padding: '12px 14px',
+                  fontFamily: 'Poppins, system-ui, sans-serif',
+                  zIndex: 2147483647,
+                  display: 'none'
+                });
+                modal.innerHTML = `
+                  <div style="font-weight:700;margin-bottom:6px;">Abrir mapa satelital</div>
+                  <div style="font-size:13px;opacity:.8;margin-bottom:10px;">
+                    Tu navegador bloqueó la ventana emergente. Haz click para abrir Google Maps.
+                  </div>
+                  <div style="display:flex;gap:8px;justify-content:flex-end;">
+                    <button id="map-dismiss" style="padding:8px 10px;border-radius:10px;border:1px solid #E4DEFF;background:#fff;cursor:pointer;">Cancelar</button>
+                    <a id="map-open" style="padding:8px 12px;border-radius:10px;background:#5F2EEA;color:#fff;text-decoration:none;cursor:pointer;">Abrir mapa</a>
+                  </div>
+                `;
+                document.body.appendChild(modal);
+                modal.querySelector('#map-dismiss').onclick = () => (modal.style.display = 'none');
+              }
+              modal.querySelector('#map-open').setAttribute('href', url);
+              modal.style.display = 'block';
+              return modal;
+            }
 
-      // Stanza 2: Verso 1, Pt. 2
-      { stanza: 2, time: 16.10, text: "Una medalla en la mano y el flow que no se va," },
-      { stanza: 2, time: 18.15, text: "desde Vista Pelícano yo arranco la misión," },
-      { stanza: 2, time: 21.02, text: "con la gente que me visite comienza el vacílón." },
+            function tryOpen(url) {
+              const win = window.open(url, '_blank', 'noopener,noreferrer');
+              if (win && !win.closed) return true; // popup abierto
+              ensureMapModal(url);                  // fallback a botón con click del usuario
+              return false;
+            }
 
-      // Stanza 3: Verso 1, Pt. 3
-      { stanza: 3, time: 23.10, text: "La noche promete, se siente el calentón." },
-      { stanza: 3, time: 25.08, text: "Puerto Rico en mi sangre y en el pico un tostón." },
+            widget.addEventListener('elevenlabs-convai:call', (event) => {
+              const cfg = event?.detail?.config;
+              if (!cfg) return;
 
-      // Stanza 4: Coro 1
-      { stanza: 4, time: 27.20, text: "Aquí el Borí Cano con la medalla siempre en mano," },
-      { stanza: 4, time: 31.09, text: "en el ferry hacia Isleta llegando a Vista Pelicano." },
-      { stanza: 4, time: 33.16, text: "El sabor de la isla, la vibra que nunca engaña," },
-      { stanza: 4, time: 35.19, text: "¡Borí Cano con la Medalla, orgullo borincano y no es una campaña!" },
-
-      // Stanza 5: Verso 2
-      { stanza: 5, time: 48.02, text: "Llegamos a Fajardo, Harbor Café encendío'," },
-      { stanza: 5, time: 50.14, text: "mofongo en la mesa, el corillo prendío'." },
-      { stanza: 5, time: 53.05, text: "Risa tras risa, botella tras botella," },
-      { stanza: 5, time: 55.23, text: "La Medalla brilla más, que en el cielo una estrella." },
-
-      // Stanza 6: Coro 2
-      { stanza: 6, time: 62.18, text: "Aquí el Borí Cano con la medalla siempre en mano," },
-      { stanza: 6, time: 65.15, text: "hacia la playa de Icacos comienza el jangueo temprano." },
-      { stanza: 6, time: 69.23, text: "El sabor de la isla, la vibra que nunca engaña," },
-      { stanza: 6, time: 73.16, text: "¡Borí Cano con la Medalla, orgullo borincano y no es una campaña!" },
-
-      // Stanza 7: Verso 3
-      { stanza: 7, time: 79.06, text: "La música sube, la islita reventá'," },
-      { stanza: 7, time: 81.18, text: "dembow en las bocinas, la gente conectá'." },
-      { stanza: 7, time: 83.02, text: "Yo, un pelícano con flow, represento mi bandera," },
-      { stanza: 7, time: 85.23, text: "aquí no hay espacio para cervezas de tercera." },
-
-      // Stanza 8: Coro Final
-      { stanza: 8, time: 97.20, text: "Aquí el Borí Cano con la Medalla siempre en mano," },
-      { stanza: 8, time: 100.17, text: "desde Isleta Marina hasta el confín borincano." },
-      { stanza: 8, time: 103.22, text: "El sabor de la isla, la vibra que nunca engaña," },
-      { stanza: 8, time: 105.20, text: "¡Borí Cano con la Medalla, orgullo borincano y no es una campaña!" },
-
-      // Stanza 9: Clear screen
-      { stanza: 9, time: 112.0, text: "" },
-    ];
-
-    let currentLyricIndex = -1;
-
-    function updateLyrics() {
-      if (!audio || !lyricsContainer) return;
-      const currentTime = audio.currentTime;
-      let newLyricIndex = -1;
-      for (let i = 0; i < lyricsData.length; i++) {
-        if (currentTime >= lyricsData[i].time) newLyricIndex = i;
-        else break;
-      }
-      if (newLyricIndex !== currentLyricIndex) {
-        currentLyricIndex = newLyricIndex;
-        lyricsContainer.innerHTML = '';
-        if (currentLyricIndex < 0) return;
-        const currentLine = lyricsData[currentLyricIndex];
-        if (currentLine && currentLine.text) {
-          const currentLineEl = document.createElement('p');
-          currentLineEl.textContent = currentLine.text;
-          currentLineEl.classList.add('lyric-line', 'active');
-          lyricsContainer.appendChild(currentLineEl);
-          const nextLine = lyricsData[currentLyricIndex + 1];
-          if (nextLine && nextLine.stanza === currentLine.stanza && nextLine.text) {
-            const nextLineEl = document.createElement('p');
-            nextLineEl.textContent = nextLine.text;
-            nextLineEl.classList.add('lyric-line');
-            lyricsContainer.appendChild(nextLineEl);
+              cfg.clientTools = {
+                ...(cfg.clientTools || {}),
+                // showMap(): abre SIEMPRE Isleta Marina en satélite
+                showMap: () => {
+                  const url = `https://www.google.com/maps/@${COORDS},${ZOOM}?basemap=satellite`;
+                  const opened = tryOpen(url);
+                  // Si en el dashboard activas "Wait for response" para pruebas,
+                  // este payload regresará al agente y sabrá si fue bloqueado.
+                  return {
+                    ok: opened,
+                    reason: opened ? 'popup-opened' : 'popup-blocked-showing-modal',
+                    mapUrl: url
+                  };
+                }
+              };
+            });
           }
-        }
-      }
-    }
 
-    if (playPauseButton && audio && logo && lyricsContainer) {
-      const playIcon = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`;
-      const pauseIcon = `<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`;
-      playPauseButton.innerHTML = playIcon;
-      const togglePlayPause = () => {
-        if (audio.paused) {
-          audio.play().catch(error => console.error("Error al reproducir:", error));
-          playPauseButton.innerHTML = pauseIcon;
-          playPauseButton.classList.add('playing');
-          playPauseButton.setAttribute('aria-label', 'Pausar música');
-          logo.classList.add('pulsing');
-          lyricsContainer.classList.add('visible');
-        } else {
-          audio.pause();
-          playPauseButton.innerHTML = playIcon;
-          playPauseButton.classList.remove('playing');
-          playPauseButton.setAttribute('aria-label', 'Reproducir música');
-          logo.classList.remove('pulsing');
-          lyricsContainer.classList.remove('visible');
-        }
-      };
-      playPauseButton.addEventListener('click', togglePlayPause);
-      audio.addEventListener('timeupdate', updateLyrics);
-      audio.addEventListener('ended', () => {
-        playPauseButton.innerHTML = playIcon;
-        playPauseButton.classList.remove('playing');
-        playPauseButton.setAttribute('aria-label', 'Reproducir música');
-        audio.currentTime = 0;
-        logo.classList.remove('pulsing');
-        lyricsContainer.classList.remove('visible');
-        lyricsContainer.innerHTML = '';
-        currentLyricIndex = -1;
-      });
-    }
-  </script>
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', attachShowMapHandler);
+          } else {
+            attachShowMapHandler();
+          }
+        })();
+      </script>
+    </main>
 
-  <div class="version-label">V3.8</div>
-</body>
+    <div class="version-label">V3.7</div>
+  </body>
 </html>
