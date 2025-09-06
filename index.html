@@ -4,17 +4,34 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Borí Cano Chat</title>
+
+    <!-- Estilos -->
     <link rel="stylesheet" href="index.css" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
   </head>
+
   <body>
+    <!-- Header -->
     <header class="app-header">
       <div class="header-left">
-        <button id="play-pause-button" class="audio-button" aria-label="Reproducir música"></button>
-        <img src="https://static.wixstatic.com/media/86b1c8_2d816491cf534b53b2b2bac9ac0a558f~mv2.png" alt="Logo de Borí Cano" class="header-logo" />
+        <button
+          id="play-pause-button"
+          class="audio-button"
+          aria-label="Reproducir música"
+        ></button>
+
+        <img
+          src="https://static.wixstatic.com/media/86b1c8_2d816491cf534b53b2b2bac9ac0a558f~mv2.png"
+          alt="Logo de Borí Cano"
+          class="header-logo"
+        />
       </div>
+
       <div class="title-container">
         <h1>Borí Cano Chat</h1>
         <p>¡Wepa panita!</p>
@@ -27,69 +44,171 @@
     <main>
       <!-- ElevenLabs Conversational AI Widget -->
       <elevenlabs-convai agent-id="agent_0301k2g45tvaere8gnrgvbj9f89k"></elevenlabs-convai>
-      <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
+      <script
+        src="https://unpkg.com/@elevenlabs/convai-widget-embed"
+        async
+        type="text/javascript"
+      ></script>
 
-      <!-- Client Tools (logMessage, openIsletaMap, showMap) -->
+      <!-- Client Tools: modal embebido (sin popups, con deep-links móvil) -->
       <script>
         (() => {
+          // --------- Config por defecto ----------
           const DEFAULT_LAT = 18.340183178224542;
           const DEFAULT_LNG = -65.61933532856209;
           const DEFAULT_ZOOM = 18;
-          const DEFAULT_BASEMAP = 'satellite';
+          const DEFAULT_BASEMAP = "satellite";
 
-          const buildMapsUrl = ({ lat = DEFAULT_LAT, lng = DEFAULT_LNG, zoom = DEFAULT_ZOOM, basemap = DEFAULT_BASEMAP } = {}) =>
-            `https://www.google.com/maps/@?api=1&map_action=map&center=${lat}%2C${lng}&zoom=${zoom}&basemap=${encodeURIComponent(basemap)}`;
+          // Detección simple de plataforma
+          const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+          const isAndroid = /Android/.test(navigator.userAgent);
 
-          const safeOpen = (url) => {
-            const w = window.open(url, '_blank', 'noopener,noreferrer');
-            if (w && !w.closed) return true;
-            // Fallback visible si bloquean popups
-            let a = document.getElementById('map-fallback-link');
-            if (!a) {
-              a = document.createElement('a');
-              a.id = 'map-fallback-link';
-              a.href = url;
-              a.target = '_blank';
-              a.rel = 'noopener noreferrer';
-              a.textContent = 'Abrir mapa satelital';
-              a.style.cssText = 'position:fixed;right:16px;bottom:16px;background:#5F2EEA;color:#fff;padding:10px 12px;border-radius:10px;z-index:99999;text-decoration:none;font-family:Poppins,system-ui,sans-serif';
-              document.body.appendChild(a);
-            } else {
-              a.href = url;
-              a.style.display = 'inline-block';
-            }
-            return false;
+          // URL para abrir fuera (web)
+          const buildExternalWeb = ({
+            lat,
+            lng,
+            zoom = DEFAULT_ZOOM,
+            basemap = DEFAULT_BASEMAP,
+          }) =>
+            `https://www.google.com/maps/@?api=1&map_action=map&center=${lat}%2C${lng}&zoom=${zoom}&basemap=${encodeURIComponent(
+              basemap
+            )}`;
+
+          // Deep links (mejor UX en móvil)
+          const buildDeepLink = ({ lat, lng, zoom = DEFAULT_ZOOM }) => {
+            if (isIOS) return `comgooglemaps://?center=${lat},${lng}&zoom=${zoom}`;
+            if (isAndroid)
+              return `geo:${lat},${lng}?q=${lat},${lng}(${encodeURIComponent(
+                "Isleta Marina"
+              )})&z=${zoom}`;
+            return null;
           };
 
-          // Debug: ver cada intento de tool call
-          window.addEventListener('elevenlabs-convai:call', (e) => {
-            console.log('[convai:call] detail =', e.detail);
+          // URL para <iframe> embebido (no requiere API key)
+          const buildEmbed = ({
+            lat,
+            lng,
+            zoom = DEFAULT_ZOOM,
+            basemap = DEFAULT_BASEMAP,
+          }) => {
+            const t = basemap === "satellite" ? "k" : "m";
+            return `https://www.google.com/maps?q=${lat},${lng}&t=${t}&z=${zoom}&output=embed&hl=es`;
+          };
+
+          // Crea (o reutiliza) un <dialog> con iframe
+          function openMapDialog({
+            lat = DEFAULT_LAT,
+            lng = DEFAULT_LNG,
+            zoom = DEFAULT_ZOOM,
+            basemap = DEFAULT_BASEMAP,
+            title = "Mapa – Isleta Marina",
+          }) {
+            // Fallback por si <dialog> no existe
+            const supportsDialog = typeof HTMLDialogElement !== "undefined";
+
+            let dlg = document.getElementById("map-dialog");
+            let overlay;
+
+            if (!dlg) {
+              if (supportsDialog) {
+                dlg = document.createElement("dialog");
+                dlg.id = "map-dialog";
+                dlg.style.cssText =
+                  "width:min(960px,96vw);height:min(80vh,720px);border:none;border-radius:14px;padding:0;overflow:hidden;background:#0b0b15;";
+                document.body.appendChild(dlg);
+              } else {
+                overlay = document.createElement("div");
+                overlay.id = "map-overlay";
+                overlay.style.cssText =
+                  "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;";
+                document.body.appendChild(overlay);
+
+                dlg = document.createElement("div");
+                dlg.id = "map-dialog";
+                dlg.style.cssText =
+                  "width:min(960px,96vw);height:min(80vh,720px);border:none;border-radius:14px;overflow:hidden;background:#0b0b15;box-shadow:0 10px 40px rgba(0,0,0,.35);";
+                overlay.appendChild(dlg);
+
+                overlay.addEventListener("click", (e) => {
+                  if (e.target === overlay) overlay.remove();
+                });
+              }
+
+              const header = document.createElement("div");
+              header.style.cssText =
+                "display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#141428;color:#fff;font-family:Poppins,system-ui,sans-serif";
+              header.innerHTML = `
+                <div style="font-weight:700;font-size:14px">${title}</div>
+                <div style="display:flex;gap:8px;">
+                  <a id="map-open-native" style="text-decoration:none;background:#5F2EEA;color:#fff;padding:8px 10px;border-radius:10px;font-size:12px">Abrir en Maps</a>
+                  <button id="map-close" style="background:#2a2a4a;color:#fff;border:0;padding:8px 10px;border-radius:10px;cursor:pointer;font-size:12px">Cerrar</button>
+                </div>
+              `;
+
+              const iframe = document.createElement("iframe");
+              iframe.id = "map-iframe";
+              iframe.style.cssText = "width:100%;height:calc(100% - 44px);border:0;";
+              iframe.setAttribute("allowfullscreen", "");
+              iframe.setAttribute("referrerpolicy", "no-referrer-when-downgrade");
+
+              dlg.appendChild(header);
+              dlg.appendChild(iframe);
+
+              header.querySelector("#map-close").onclick = () => {
+                if (supportsDialog) dlg.close("user");
+                else document.getElementById("map-overlay")?.remove();
+              };
+            }
+
+            const embedUrl = buildEmbed({ lat, lng, zoom, basemap });
+            const externalUrl = buildExternalWeb({ lat, lng, zoom, basemap });
+            const deep = buildDeepLink({ lat, lng, zoom }) || externalUrl;
+
+            dlg.querySelector("#map-iframe").src = embedUrl;
+
+            const a = dlg.querySelector("#map-open-native");
+            a.href = deep;
+            a.target = deep.startsWith("http") ? "_blank" : "_self";
+            a.rel = "noopener noreferrer";
+
+            if (typeof dlg.showModal === "function" && !dlg.open) dlg.showModal();
+            else if (document.getElementById("map-overlay"))
+              document.getElementById("map-overlay").style.display = "flex";
+
+            return { ok: true, embedUrl, externalUrl, deep };
+          }
+
+          // --- Debug: ver cada intento de tool call ---
+          window.addEventListener("elevenlabs-convai:call", (e) => {
+            console.log("[convai:call] detail =", e.detail);
           });
 
-          // Registrar client tools (¡en window!)
-          window.addEventListener('elevenlabs-convai:call', (event) => {
+          // --- Registrar client tools (evento en window) ---
+          window.addEventListener("elevenlabs-convai:call", (event) => {
             const cfg = event.detail?.config || {};
             cfg.clientTools = {
               ...(cfg.clientTools || {}),
 
               // A) Diagnóstico
               logMessage: ({ message }) => {
-                console.log('[logMessage]', message);
+                console.log("[logMessage]", message);
                 return { ok: true, echo: message };
               },
 
-              // B) Abrir mapa fijo (Isleta Marina)
-              openIsletaMap: () => {
-                const url = buildMapsUrl();
-                const opened = safeOpen(url);
-                return { ok: opened, url };
-              },
+              // B) Mapa fijo
+              openIsletaMap: () => openMapDialog({}),
 
-              // C) Abrir mapa dinámico (desde URL o con lat/lng/zoom/basemap)
+              // C) Mapa dinámico: acepta { url } o { lat,lng,zoom,basemap }
               showMap: ({ url, lat, lng, zoom, basemap }) => {
-                const finalUrl = url || buildMapsUrl({ lat, lng, zoom, basemap });
-                const opened = safeOpen(finalUrl);
-                return { ok: opened, url: finalUrl };
+                if (url) {
+                  const m = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+),(\d+)z/);
+                  if (m) {
+                    lat = parseFloat(m[1]);
+                    lng = parseFloat(m[2]);
+                    zoom = parseInt(m[3], 10);
+                  }
+                }
+                return openMapDialog({ lat, lng, zoom, basemap });
               },
             };
             event.detail.config = cfg; // reinyecta la config
@@ -99,17 +218,20 @@
     </main>
 
     <!-- Audio de fondo -->
-    <audio id="background-audio" src="https://static.wixstatic.com/mp3/86b1c8_a1bd589ba7e547dc8a7a4cd761c40135.mp3" preload="auto"></audio>
+    <audio
+      id="background-audio"
+      src="https://static.wixstatic.com/mp3/86b1c8_a1bd589ba7e547dc8a7a4cd761c40135.mp3"
+      preload="auto"
+    ></audio>
 
     <!-- Karaoke + Play/Pause -->
     <script>
       (function () {
-        const playPauseButton = document.getElementById('play-pause-button');
-        const audio = document.getElementById('background-audio');
-        const logo = document.querySelector('.header-logo');
-        const lyricsContainer = document.getElementById('lyrics-container');
+        const playPauseButton = document.getElementById("play-pause-button");
+        const audio = document.getElementById("background-audio");
+        const logo = document.querySelector(".header-logo");
+        const lyricsContainer = document.getElementById("lyrics-container");
 
-        // Datos de la letra con tiempos
         const lyricsData = [
           { stanza: 0, time: 0.16, text: "Desde el balcón de Vista Pelícano," },
           { stanza: 0, time: 1.16, text: "mirando el mar azulito," },
@@ -118,15 +240,20 @@
           { stanza: 1, time: 9.03, text: "Yo soy Borí Cano. Aterrizo en la Marina" },
           { stanza: 1, time: 11.22, text: "con el ferry cruzando, la brisa fresca no termina." },
           { stanza: 1, time: 13.04, text: "El sol pega duro por alante y por atrás." },
-          { stanza: 2, time: 16.10, text: "Una medalla en la mano y el flow que no se va," },
+          { stanza: 2, time: 16.1, text: "Una medalla en la mano y el flow que no se va," },
           { stanza: 2, time: 18.15, text: "desde Vista Pelícano yo arranco la misión," },
           { stanza: 2, time: 21.02, text: "con la gente que me visite comienza el vacílón." },
-          { stanza: 3, time: 23.10, text: "La noche promete, se siente el calentón." },
+          { stanza: 3, time: 23.1, text: "La noche promete, se siente el calentón." },
           { stanza: 3, time: 25.08, text: "Puerto Rico en mi sangre y en el pico un tostón." },
-          { stanza: 4, time: 27.20, text: "Aquí el Borí Cano con la medalla siempre en mano," },
+          { stanza: 4, time: 27.2, text: "Aquí el Borí Cano con la medalla siempre en mano," },
           { stanza: 4, time: 31.09, text: "en el ferry hacia Isleta llegando a Vista Pelicano." },
           { stanza: 4, time: 33.16, text: "El sabor de la isla, la vibra que nunca engaña," },
-          { stanza: 4, time: 35.19, text: "¡Borí Cano con la Medalla, orgullo borincano y no es una campaña!" },
+          {
+            stanza: 4,
+            time: 35.19,
+            text:
+              "¡Borí Cano con la Medalla, orgullo borincano y no es una campaña!",
+          },
           { stanza: 5, time: 48.02, text: "Llegamos a Fajardo, Harbor Café encendío'," },
           { stanza: 5, time: 50.14, text: "mofongo en la mesa, el corillo prendío'." },
           { stanza: 5, time: 53.05, text: "Risa tras risa, botella tras botella," },
@@ -134,15 +261,25 @@
           { stanza: 6, time: 62.18, text: "Aquí el Borí Cano con la medalla siempre en mano," },
           { stanza: 6, time: 65.15, text: "hacia la playa de Icacos comienza el jangueo temprano." },
           { stanza: 6, time: 69.23, text: "El sabor de la isla, la vibra que nunca engaña," },
-          { stanza: 6, time: 73.16, text: "¡Borí Cano con la Medalla, orgullo borincano y no es una campaña!" },
+          {
+            stanza: 6,
+            time: 73.16,
+            text:
+              "¡Borí Cano con la Medalla, orgullo borincano y no es una campaña!",
+          },
           { stanza: 7, time: 79.06, text: "La música sube, la islita reventá'," },
           { stanza: 7, time: 81.18, text: "dembow en las bocinas, la gente conectá'." },
           { stanza: 7, time: 83.02, text: "Yo, un pelícano con flow, represento mi bandera," },
           { stanza: 7, time: 85.23, text: "aquí no hay espacio para cervezas de tercera." },
-          { stanza: 8, time: 97.20, text: "Aquí el Borí Cano con la Medalla siempre en mano," },
+          { stanza: 8, time: 97.2, text: "Aquí el Borí Cano con la Medalla siempre en mano," },
           { stanza: 8, time: 100.17, text: "desde Isleta Marina hasta el confín borincano." },
           { stanza: 8, time: 103.22, text: "El sabor de la isla, la vibra que nunca engaña," },
-          { stanza: 8, time: 107.22, text: "¡Borí Cano con la Medalla, orgullo de Borinquen en las entrañas!" },
+          {
+            stanza: 8,
+            time: 107.22,
+            text:
+              "¡Borí Cano con la Medalla, orgullo de Borinquen en las entrañas!",
+          },
           { stanza: 9, time: 112.0, text: "" },
         ];
 
@@ -160,24 +297,28 @@
 
           if (newLyricIndex !== currentLyricIndex) {
             currentLyricIndex = newLyricIndex;
-            lyricsContainer.innerHTML = '';
+            lyricsContainer.innerHTML = "";
             if (currentLyricIndex < 0) return;
 
             const createLineEl = (line) => {
-              const p = document.createElement('p');
+              const p = document.createElement("p");
               p.textContent = line.text;
-              p.classList.add('lyric-line');
+              p.classList.add("lyric-line");
               return p;
             };
 
             const currentLine = lyricsData[currentLyricIndex];
             if (currentLine && currentLine.text) {
               const currentLineEl = createLineEl(currentLine);
-              currentLineEl.classList.add('active');
+              currentLineEl.classList.add("active");
               lyricsContainer.appendChild(currentLineEl);
 
               const nextLine = lyricsData[currentLyricIndex + 1];
-              if (nextLine && nextLine.stanza === currentLine.stanza && nextLine.text) {
+              if (
+                nextLine &&
+                nextLine.stanza === currentLine.stanza &&
+                nextLine.text
+              ) {
                 const nextLineEl = createLineEl(nextLine);
                 lyricsContainer.appendChild(nextLineEl);
               }
@@ -186,46 +327,51 @@
         }
 
         if (playPauseButton && audio && logo && lyricsContainer) {
-          const playIcon  = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
-          const pauseIcon = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+          const playIcon =
+            '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+          const pauseIcon =
+            '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
 
           playPauseButton.innerHTML = playIcon;
 
           const togglePlayPause = () => {
             if (audio.paused) {
-              audio.play().catch(err => console.error("La reproducción de audio falló:", err));
+              audio
+                .play()
+                .catch((err) => console.error("La reproducción de audio falló:", err));
               playPauseButton.innerHTML = pauseIcon;
-              playPauseButton.classList.add('playing');
-              playPauseButton.setAttribute('aria-label', 'Pausar música');
-              logo.classList.add('pulsing');
-              lyricsContainer.classList.add('visible');
+              playPauseButton.classList.add("playing");
+              playPauseButton.setAttribute("aria-label", "Pausar música");
+              logo.classList.add("pulsing");
+              lyricsContainer.classList.add("visible");
             } else {
               audio.pause();
               playPauseButton.innerHTML = playIcon;
-              playPauseButton.classList.remove('playing');
-              playPauseButton.setAttribute('aria-label', 'Reproducir música');
-              logo.classList.remove('pulsing');
-              lyricsContainer.classList.remove('visible');
+              playPauseButton.classList.remove("playing");
+              playPauseButton.setAttribute("aria-label", "Reproducir música");
+              logo.classList.remove("pulsing");
+              lyricsContainer.classList.remove("visible");
             }
           };
 
-          playPauseButton.addEventListener('click', togglePlayPause);
-          audio.addEventListener('timeupdate', updateLyrics);
+          playPauseButton.addEventListener("click", togglePlayPause);
+          audio.addEventListener("timeupdate", updateLyrics);
 
-          audio.addEventListener('ended', () => {
+          audio.addEventListener("ended", () => {
             playPauseButton.innerHTML = playIcon;
-            playPauseButton.classList.remove('playing');
-            playPauseButton.setAttribute('aria-label', 'Reproducir música');
+            playPauseButton.classList.remove("playing");
+            playPauseButton.setAttribute("aria-label", "Reproducir música");
             audio.currentTime = 0;
-            logo.classList.remove('pulsing');
-            lyricsContainer.classList.remove('visible');
-            lyricsContainer.innerHTML = '';
+            logo.classList.remove("pulsing");
+            lyricsContainer.classList.remove("visible");
+            lyricsContainer.innerHTML = "";
             currentLyricIndex = -1;
           });
         }
       })();
     </script>
 
-    <div class="version-label">V3.9</div>
+    <!-- Versión -->
+    <div class="version-label">V3.7</div>
   </body>
 </html>
