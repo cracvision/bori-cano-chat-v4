@@ -8,6 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+  <!-- Script de ElevenLabs (correcto para widget público) -->
+  <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
 </head>
 <body>
   <div class="app-header">
@@ -20,129 +22,82 @@
       <p>¡Wepa panita!</p>
     </div>
   </div>
-  <audio id="background-audio" src="boricano-song.mp3"></audio> <!-- Reemplaza con el src real de la canción -->
+  <audio id="background-audio" src="boricano-song.mp3"></audio> <!-- Ajusta src real -->
   <div id="lyrics-container"></div>
 
-  <!-- Script de ElevenLabs (del repo GitHub) -->
-  <script src="https://cdn.elevenlabs.io/elevenlabs-conversational.js"></script>
-  <script>
-    window.ElevenLabsConversational({
-      agentId: "iYd2p1H5s0lWOpN6dX0V",
-      apiKey: "4e4f5a9ab2b2b1c0d9e9f1e1d1c1b1a",
-    });
-  </script>
+  <!-- Widget ElevenLabs como custom element (para agente público) -->
+  <elevenlabs-convai agent-id="iYd2p1H5s0lWOpN6dX0V"></elevenlabs-convai>
 
-  <!-- Código JS adaptado de index.tsx (convertido a JS puro) -->
+  <!-- Código JS adaptado (lyricsData completo) -->
   <script>
     const playPauseButton = document.getElementById('play-pause-button');
     const audio = document.getElementById('background-audio');
     const logo = document.querySelector('.header-logo');
     const lyricsContainer = document.getElementById('lyrics-container');
 
-    // Datos de la letra con tiempos precisos y estrofas reestructuradas
     const lyricsData = [
-      // Stanza 0: Intro
       { stanza: 0, time: 0.16, text: "Desde el balcón de Vista Pelícano," },
       { stanza: 0, time: 1.16, text: "mirando el mar azulito," },
       { stanza: 0, time: 3.03, text: "llenando la neverita desde bien tempranito." },
       { stanza: 0, time: 5.16, text: "Este vacilón tiene nombre y apellido." },
-
-      // Stanza 1: Verso 1
       { stanza: 1, time: 9.03, text: "Yo soy Borí Cano. Aterrizo en la Marina" },
       { stanza: 1, time: 11.22, text: "con el ferry cruzando, la brisa fresca no termina." },
       { stanza: 1, time: 13.04, text: "El sol pega duro por alante y por atrás." },
-
-      // Stanza 2: Verso 1, Pt. 2
       { stanza: 2, time: 16.10, text: "Una medalla en la mano y el flow que no se va," },
       { stanza: 2, time: 18.15, text: "desde Vista Pelícano yo arranco la misión," },
       { stanza: 2, time: 21.02, text: "con la gente que me visite comienza el vacílón." },
-
-      // Stanza 3: Verso 1, Pt. 3
       { stanza: 3, time: 23.10, text: "La noche promete, se siente el calentón." },
       { stanza: 3, time: 25.08, text: "Puerto Rico en mi sangre y en el pico un tostón." },
-
-      // Stanza 4: Coro 1
       { stanza: 4, time: 27.20, text: "Aquí el Borí Cano con la medalla siempre en mano," },
       { stanza: 4, time: 31.09, text: "en el ferry hacia Isleta llegando a Vista Pelicano." },
       { stanza: 4, time: 33.16, text: "El sabor de la isla, la vibra que nunca engaña," },
       { stanza: 4, time: 35.19, text: "¡Borí Cano con la Medalla, orgullo borincano y no es una campaña!" },
-
-      // Stanza 5: Verso 2
       { stanza: 5, time: 48.02, text: "Llegamos a Fajardo, Harbor Café encendío'," },
       { stanza: 5, time: 50.14, text: "mofongo en la mesa, el corillo prendío'." },
       { stanza: 5, time: 53.05, text: "Risa tras risa, botella tras botella," },
       { stanza: 5, time: 55.23, text: "La Medalla brilla más, que en el cielo una estrella." },
-      
-      // Stanza 6: Coro 2
       { stanza: 6, time: 62.18, text: "Aquí el Borí Cano con la medalla siempre en mano," },
       { stanza: 6, time: 65.15, text: "hacia la playa de Icacos comienza el jangueo temprano." },
       { stanza: 6, time: 69.23, text: "El sabor de la isla, la vibra que nunca engaña," },
       { stanza: 6, time: 73.16, text: "¡Borí Cano con la Medalla, orgullo borincano y no es una campaña!" },
-
-      // Stanza 7: Verso 3
       { stanza: 7, time: 79.06, text: "La música sube, la islita reventá'," },
       { stanza: 7, time: 81.18, text: "dembow en las bocinas, la gente conectá'." },
       { stanza: 7, time: 83.02, text: "Yo, un pelícano con flow, represento mi bandera," },
       { stanza: 7, time: 85.23, text: "aquí no hay espacio para cervezas de tercera." },
-
-      // Stanza 8: Coro Final
       { stanza: 8, time: 97.20, text: "Aquí el Borí Cano con la Medalla siempre en mano," },
       { stanza: 8, time: 100.17, text: "desde Isleta Marina hasta el confín borincano." },
       { stanza: 8, time: 103.22, text: "El sabor de la isla, la vibra que nunca engaña," },
-      { stanza: 8, time: 1, text: "" }, // Truncated en doc, ajusta si completo
-
-      // Stanza 9: Clear screen
+      { stanza: 8, time: 105.20, text: "¡Borí Cano con la Medalla, orgullo borincano y no es una campaña!" },
       { stanza: 9, time: 112.0, text: "" },
     ];
 
     let currentLyricIndex = -1;
 
-    // Función para actualizar la letra activa
     function updateLyrics() {
       if (!audio || !lyricsContainer) return;
       const currentTime = audio.currentTime;
-
-      // Encontrar el índice de la línea actual
       let newLyricIndex = -1;
       for (let i = 0; i < lyricsData.length; i++) {
-        if (currentTime >= lyricsData[i].time) {
-          newLyricIndex = i;
-        } else {
-          break;
-        }
+        if (currentTime >= lyricsData[i].time) newLyricIndex = i;
+        else break;
       }
-
-      // Solo actualizar el DOM si la línea activa ha cambiado
       if (newLyricIndex !== currentLyricIndex) {
         currentLyricIndex = newLyricIndex;
-        
-        lyricsContainer.innerHTML = ''; // Limpiar el contenedor
-
-        if (currentLyricIndex < 0) {
-          return; // Aún no hay línea activa
-        }
-
-        // Helper para crear el elemento de la línea
-        const createLineEl = (line) => {
-          const p = document.createElement('p');
-          p.textContent = line.text;
-          p.classList.add('lyric-line');
-          return p;
-        };
-
+        lyricsContainer.innerHTML = '';
+        if (currentLyricIndex < 0) return;
         const currentLine = lyricsData[currentLyricIndex];
         if (currentLine && currentLine.text) {
-            // Crear, activar y añadir la línea actual
-            const currentLineEl = createLineEl(currentLine);
-            currentLineEl.classList.add('active');
-            lyricsContainer.appendChild(currentLineEl);
-            
-            // Comprobar si hay una línea siguiente en la misma estrofa
-            const nextLine = lyricsData[currentLyricIndex + 1];
-            if (nextLine && nextLine.stanza === currentLine.stanza && nextLine.text) {
-                const nextLineEl = createLineEl(nextLine);
-                lyricsContainer.appendChild(nextLineEl);
-            }
+          const currentLineEl = document.createElement('p');
+          currentLineEl.textContent = currentLine.text;
+          currentLineEl.classList.add('lyric-line', 'active');
+          lyricsContainer.appendChild(currentLineEl);
+          const nextLine = lyricsData[currentLyricIndex + 1];
+          if (nextLine && nextLine.stanza === currentLine.stanza && nextLine.text) {
+            const nextLineEl = document.createElement('p');
+            nextLineEl.textContent = nextLine.text;
+            nextLineEl.classList.add('lyric-line');
+            lyricsContainer.appendChild(nextLineEl);
+          }
         }
       }
     }
@@ -150,12 +105,10 @@
     if (playPauseButton && audio && logo && lyricsContainer) {
       const playIcon = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`;
       const pauseIcon = `<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`;
-
       playPauseButton.innerHTML = playIcon;
-
       const togglePlayPause = () => {
         if (audio.paused) {
-          audio.play().catch(error => console.error("La reproducción de audio falló:", error));
+          audio.play().catch(error => console.error("Error al reproducir:", error));
           playPauseButton.innerHTML = pauseIcon;
           playPauseButton.classList.add('playing');
           playPauseButton.setAttribute('aria-label', 'Pausar música');
@@ -170,11 +123,8 @@
           lyricsContainer.classList.remove('visible');
         }
       };
-
       playPauseButton.addEventListener('click', togglePlayPause);
-      
       audio.addEventListener('timeupdate', updateLyrics);
-
       audio.addEventListener('ended', () => {
         playPauseButton.innerHTML = playIcon;
         playPauseButton.classList.remove('playing');
@@ -182,8 +132,6 @@
         audio.currentTime = 0;
         logo.classList.remove('pulsing');
         lyricsContainer.classList.remove('visible');
-        
-        // Limpiar la letra y resetear el índice
         lyricsContainer.innerHTML = '';
         currentLyricIndex = -1;
       });
