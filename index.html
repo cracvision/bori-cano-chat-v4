@@ -25,95 +25,83 @@
     <div id="lyrics-container"></div>
 
     <main>
-      <!-- ElevenLabs Conversational AI Widget (se mantiene) -->
+      <!-- ElevenLabs Conversational AI Widget -->
       <elevenlabs-convai agent-id="agent_0301k2g45tvaere8gnrgvbj9f89k"></elevenlabs-convai>
       <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
 
-      <!-- Client Tool: showMap (Isleta Marina, satélite, popup + fallback) -->
+      <!-- Client Tools (logMessage, openIsletaMap, showMap) -->
       <script>
-        (function () {
-          const COORDS = "18.340183178224542,-65.61933532856209"; // Isleta Marina
-          const ZOOM = "18z";
+        (() => {
+          const DEFAULT_LAT = 18.340183178224542;
+          const DEFAULT_LNG = -65.61933532856209;
+          const DEFAULT_ZOOM = 18;
+          const DEFAULT_BASEMAP = 'satellite';
 
-          function attachShowMapHandler() {
-            const widget = document.querySelector('elevenlabs-convai');
-            if (!widget) return setTimeout(attachShowMapHandler, 60);
+          const buildMapsUrl = ({ lat = DEFAULT_LAT, lng = DEFAULT_LNG, zoom = DEFAULT_ZOOM, basemap = DEFAULT_BASEMAP } = {}) =>
+            `https://www.google.com/maps/@?api=1&map_action=map&center=${lat}%2C${lng}&zoom=${zoom}&basemap=${encodeURIComponent(basemap)}`;
 
-            function ensureMapModal(url) {
-              let modal = document.getElementById('map-modal');
-              if (!modal) {
-                modal = document.createElement('div');
-                modal.id = 'map-modal';
-                Object.assign(modal.style, {
-                  position: 'fixed',
-                  right: '16px',
-                  bottom: '16px',
-                  background: '#fff',
-                  border: '1px solid #E4DEFF',
-                  borderRadius: '12px',
-                  boxShadow: '0 8px 30px rgba(0,0,0,.12)',
-                  padding: '12px 14px',
-                  fontFamily: 'Poppins, system-ui, sans-serif',
-                  zIndex: 2147483647,
-                  display: 'none'
-                });
-                modal.innerHTML = `
-                  <div style="font-weight:700;margin-bottom:6px;">Abrir mapa satelital</div>
-                  <div style="font-size:13px;opacity:.8;margin-bottom:10px;">
-                    Tu navegador bloqueó la ventana emergente. Haz click para abrir Google Maps.
-                  </div>
-                  <div style="display:flex;gap:8px;justify-content:flex-end;">
-                    <button id="map-dismiss" style="padding:8px 10px;border-radius:10px;border:1px solid #E4DEFF;background:#fff;cursor:pointer;">Cancelar</button>
-                    <a id="map-open" style="padding:8px 12px;border-radius:10px;background:#5F2EEA;color:#fff;text-decoration:none;cursor:pointer;">Abrir mapa</a>
-                  </div>
-                `;
-                document.body.appendChild(modal);
-                modal.querySelector('#map-dismiss').onclick = () => (modal.style.display = 'none');
-              }
-              modal.querySelector('#map-open').setAttribute('href', url);
-              modal.style.display = 'block';
-              return modal;
+          const safeOpen = (url) => {
+            const w = window.open(url, '_blank', 'noopener,noreferrer');
+            if (w && !w.closed) return true;
+            // Fallback visible si bloquean popups
+            let a = document.getElementById('map-fallback-link');
+            if (!a) {
+              a = document.createElement('a');
+              a.id = 'map-fallback-link';
+              a.href = url;
+              a.target = '_blank';
+              a.rel = 'noopener noreferrer';
+              a.textContent = 'Abrir mapa satelital';
+              a.style.cssText = 'position:fixed;right:16px;bottom:16px;background:#5F2EEA;color:#fff;padding:10px 12px;border-radius:10px;z-index:99999;text-decoration:none;font-family:Poppins,system-ui,sans-serif';
+              document.body.appendChild(a);
+            } else {
+              a.href = url;
+              a.style.display = 'inline-block';
             }
+            return false;
+          };
 
-            function tryOpen(url) {
-              const win = window.open(url, '_blank', 'noopener,noreferrer');
-              if (win && !win.closed) return true;
-              ensureMapModal(url);
-              return false;
-            }
+          // Debug: ver cada intento de tool call
+          window.addEventListener('elevenlabs-convai:call', (e) => {
+            console.log('[convai:call] detail =', e.detail);
+          });
 
-            widget.addEventListener('elevenlabs-convai:call', (event) => {
-              const cfg = event?.detail?.config;
-              if (!cfg) return;
+          // Registrar client tools (¡en window!)
+          window.addEventListener('elevenlabs-convai:call', (event) => {
+            const cfg = event.detail?.config || {};
+            cfg.clientTools = {
+              ...(cfg.clientTools || {}),
 
-              cfg.clientTools = {
-                ...(cfg.clientTools || {}),
-                showMap: () => {
-                  const url = `https://www.google.com/maps/@${COORDS},${ZOOM}?basemap=satellite`;
-                  const opened = tryOpen(url);
-                  return {
-                    ok: opened,
-                    reason: opened ? 'popup-opened' : 'popup-blocked-showing-modal',
-                    mapUrl: url
-                  };
-                }
-              };
-            });
-          }
+              // A) Diagnóstico
+              logMessage: ({ message }) => {
+                console.log('[logMessage]', message);
+                return { ok: true, echo: message };
+              },
 
-          if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', attachShowMapHandler);
-          } else {
-            attachShowMapHandler();
-          }
+              // B) Abrir mapa fijo (Isleta Marina)
+              openIsletaMap: () => {
+                const url = buildMapsUrl();
+                const opened = safeOpen(url);
+                return { ok: opened, url };
+              },
+
+              // C) Abrir mapa dinámico (desde URL o con lat/lng/zoom/basemap)
+              showMap: ({ url, lat, lng, zoom, basemap }) => {
+                const finalUrl = url || buildMapsUrl({ lat, lng, zoom, basemap });
+                const opened = safeOpen(finalUrl);
+                return { ok: opened, url: finalUrl };
+              },
+            };
+            event.detail.config = cfg; // reinyecta la config
+          });
         })();
       </script>
     </main>
 
-    <!-- Audio de fondo (misma URL del prototipo 3.7) -->
+    <!-- Audio de fondo -->
     <audio id="background-audio" src="https://static.wixstatic.com/mp3/86b1c8_a1bd589ba7e547dc8a7a4cd761c40135.mp3" preload="auto"></audio>
 
-    <!-- Karaoke + Play/Pause (JS puro, conversión del TSX 3.7) -->
+    <!-- Karaoke + Play/Pause -->
     <script>
       (function () {
         const playPauseButton = document.getElementById('play-pause-button');
@@ -121,7 +109,7 @@
         const logo = document.querySelector('.header-logo');
         const lyricsContainer = document.getElementById('lyrics-container');
 
-        // Datos de la letra con tiempos (de 3.7)
+        // Datos de la letra con tiempos
         const lyricsData = [
           { stanza: 0, time: 0.16, text: "Desde el balcón de Vista Pelícano," },
           { stanza: 0, time: 1.16, text: "mirando el mar azulito," },
@@ -238,6 +226,6 @@
       })();
     </script>
 
-    <div class="version-label">V3.7</div>
+    <div class="version-label">V3.9</div>
   </body>
 </html>
