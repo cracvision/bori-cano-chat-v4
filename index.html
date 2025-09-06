@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
-  <!-- Script de ElevenLabs (correcto para widget público) -->
+  <!-- Script de ElevenLabs correcto para widget público -->
   <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
 </head>
 <body>
@@ -17,57 +17,75 @@
       <img class="header-logo" src="https://static.wixstatic.com/media/86b1c8_db2a61ccfc33487cadc257663f491523~mv2.png" alt="Borí Cano Logo">
       <button id="play-pause-button" class="audio-button" aria-label="Reproducir música"></button>
     </div>
-    <div class="title-container">
-      <h1>Borí Cano Chat</h1>
-      <p>¡Wepa panita!</p>
-    </div>
+    <h1>Borí Cano Chat</h1>
+    <p>¡Wepa panita!</p>
   </div>
-  <audio id="background-audio" src="boricano-song.mp3"></audio> <!-- Ajusta src real -->
+  <audio id="background-audio" src="boricano-song.mp3"></audio> <!-- Ajusta src real, e.g., './boricano-song.mp3' si en repo -->
   <div id="lyrics-container"></div>
 
   <!-- Widget ElevenLabs como custom element (para agente público) -->
   <elevenlabs-convai agent-id="iYd2p1H5s0lWOpN6dX0V"></elevenlabs-convai>
 
-  <!-- Código JS adaptado (lyricsData completo) -->
+  <!-- Código JS adaptado, con lyricsData completo (no truncado) -->
   <script>
     const playPauseButton = document.getElementById('play-pause-button');
     const audio = document.getElementById('background-audio');
     const logo = document.querySelector('.header-logo');
     const lyricsContainer = document.getElementById('lyrics-container');
 
+    // lyricsData completo (todas estrofas y timings para efecto karaoke intacto)
     const lyricsData = [
+      // Stanza 0: Intro
       { stanza: 0, time: 0.16, text: "Desde el balcón de Vista Pelícano," },
       { stanza: 0, time: 1.16, text: "mirando el mar azulito," },
       { stanza: 0, time: 3.03, text: "llenando la neverita desde bien tempranito." },
       { stanza: 0, time: 5.16, text: "Este vacilón tiene nombre y apellido." },
+
+      // Stanza 1: Verso 1
       { stanza: 1, time: 9.03, text: "Yo soy Borí Cano. Aterrizo en la Marina" },
       { stanza: 1, time: 11.22, text: "con el ferry cruzando, la brisa fresca no termina." },
       { stanza: 1, time: 13.04, text: "El sol pega duro por alante y por atrás." },
+
+      // Stanza 2: Verso 1, Pt. 2
       { stanza: 2, time: 16.10, text: "Una medalla en la mano y el flow que no se va," },
       { stanza: 2, time: 18.15, text: "desde Vista Pelícano yo arranco la misión," },
       { stanza: 2, time: 21.02, text: "con la gente que me visite comienza el vacílón." },
+
+      // Stanza 3: Verso 1, Pt. 3
       { stanza: 3, time: 23.10, text: "La noche promete, se siente el calentón." },
       { stanza: 3, time: 25.08, text: "Puerto Rico en mi sangre y en el pico un tostón." },
+
+      // Stanza 4: Coro 1
       { stanza: 4, time: 27.20, text: "Aquí el Borí Cano con la medalla siempre en mano," },
       { stanza: 4, time: 31.09, text: "en el ferry hacia Isleta llegando a Vista Pelicano." },
       { stanza: 4, time: 33.16, text: "El sabor de la isla, la vibra que nunca engaña," },
       { stanza: 4, time: 35.19, text: "¡Borí Cano con la Medalla, orgullo borincano y no es una campaña!" },
+
+      // Stanza 5: Verso 2
       { stanza: 5, time: 48.02, text: "Llegamos a Fajardo, Harbor Café encendío'," },
       { stanza: 5, time: 50.14, text: "mofongo en la mesa, el corillo prendío'." },
       { stanza: 5, time: 53.05, text: "Risa tras risa, botella tras botella," },
       { stanza: 5, time: 55.23, text: "La Medalla brilla más, que en el cielo una estrella." },
+
+      // Stanza 6: Coro 2
       { stanza: 6, time: 62.18, text: "Aquí el Borí Cano con la medalla siempre en mano," },
       { stanza: 6, time: 65.15, text: "hacia la playa de Icacos comienza el jangueo temprano." },
       { stanza: 6, time: 69.23, text: "El sabor de la isla, la vibra que nunca engaña," },
       { stanza: 6, time: 73.16, text: "¡Borí Cano con la Medalla, orgullo borincano y no es una campaña!" },
+
+      // Stanza 7: Verso 3
       { stanza: 7, time: 79.06, text: "La música sube, la islita reventá'," },
       { stanza: 7, time: 81.18, text: "dembow en las bocinas, la gente conectá'." },
       { stanza: 7, time: 83.02, text: "Yo, un pelícano con flow, represento mi bandera," },
       { stanza: 7, time: 85.23, text: "aquí no hay espacio para cervezas de tercera." },
+
+      // Stanza 8: Coro Final
       { stanza: 8, time: 97.20, text: "Aquí el Borí Cano con la Medalla siempre en mano," },
       { stanza: 8, time: 100.17, text: "desde Isleta Marina hasta el confín borincano." },
       { stanza: 8, time: 103.22, text: "El sabor de la isla, la vibra que nunca engaña," },
       { stanza: 8, time: 105.20, text: "¡Borí Cano con la Medalla, orgullo borincano y no es una campaña!" },
+
+      // Stanza 9: Clear screen
       { stanza: 9, time: 112.0, text: "" },
     ];
 
