@@ -9,10 +9,26 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet" />
+    <style>
+      /* Mini toasts de debug (útiles en móvil) */
+      .toast {
+        position: fixed; right: 12px; top: 12px; z-index: 2147483647;
+        display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+      }
+      .toast > div {
+        pointer-events: auto;
+        background: #141428; color: #fff; border: 1px solid #2b2b4b;
+        padding: 8px 10px; border-radius: 10px; font: 12px/1.35 Poppins, system-ui, sans-serif;
+        box-shadow: 0 6px 24px rgba(0,0,0,.25);
+      }
+      .toast .ok { border-color: #2e7d32; }
+      .toast .warn { border-color: #cc8f00; }
+      .toast .err { border-color: #b00020; }
+    </style>
   </head>
 
   <body>
-    <!-- Header (sin botón ni logo para que el karaoke sea sorpresa) -->
+    <!-- Header (limpio; karaoke es sorpresa) -->
     <header class="app-header">
       <div class="title-container" style="margin-left:0">
         <h1>Borí Cano Chat</h1>
@@ -25,9 +41,23 @@
       <elevenlabs-convai agent-id="agent_0301k2g45tvaere8gnrgvbj9f89k"></elevenlabs-convai>
       <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
 
-      <!-- Modales y Client Tools (mapa, imagen y karaoke) -->
       <script>
         (() => {
+          const DEBUG_MODE = true;
+
+          /* ---------- Toasts visibles (sirven en móvil) ---------- */
+          const toastRoot = document.createElement('div');
+          toastRoot.className = 'toast';
+          document.addEventListener('DOMContentLoaded', () => document.body.appendChild(toastRoot));
+          function toast(msg, kind='ok', ttl=3500) {
+            if (!DEBUG_MODE) return;
+            const el = document.createElement('div');
+            el.className = kind;
+            el.textContent = msg;
+            toastRoot.appendChild(el);
+            setTimeout(() => el.remove(), ttl);
+          }
+
           /* ========================
            *  MAPA EMBEBIDO (modal)
            * ======================== */
@@ -40,7 +70,6 @@
             const t = basemap === "satellite" ? "k" : "m";
             return `https://www.google.com/maps?q=${lat},${lng}&t=${t}&z=${zoom}&output=embed&hl=es`;
           };
-
           const buildExternalMap = ({ lat = DEFAULT_LAT, lng = DEFAULT_LNG, zoom = DEFAULT_ZOOM, basemap = DEFAULT_BASEMAP } = {}) =>
             `https://www.google.com/maps/@?api=1&map_action=map&center=${lat}%2C${lng}&zoom=${zoom}&basemap=${encodeURIComponent(basemap)}`;
 
@@ -66,9 +95,7 @@
                 dlg.style.cssText = "width:min(960px,96vw);height:min(80vh,720px);border:none;border-radius:14px;overflow:hidden;background:#0b0b15;box-shadow:0 10px 40px rgba(0,0,0,.35);";
                 overlay.appendChild(dlg);
 
-                overlay.addEventListener("click", (e) => {
-                  if (e.target === overlay) overlay.remove();
-                });
+                overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
               }
 
               const header = document.createElement("div");
@@ -80,7 +107,6 @@
                   <button id="map-close" style="background:#2a2a4a;color:#fff;border:0;padding:8px 10px;border-radius:10px;cursor:pointer;font-size:12px">Cerrar</button>
                 </div>
               `;
-
               const iframe = document.createElement("iframe");
               iframe.id = "map-iframe";
               iframe.style.cssText = "width:100%;height:calc(100% - 44px);border:0;";
@@ -102,7 +128,6 @@
             }
 
             dlg.querySelector("#map-iframe").src = buildEmbedMap({ lat, lng, zoom, basemap });
-
             const a = dlg.querySelector("#btn-map-open");
             a.href = buildExternalMap({ lat, lng, zoom, basemap });
 
@@ -139,9 +164,7 @@
                 dlg.style.cssText = "width:min(960px,96vw);height:min(80vh,720px);border:none;border-radius:14px;overflow:hidden;background:#0b0b15;box-shadow:0 10px 40px rgba(0,0,0,.35);";
                 overlay.appendChild(dlg);
 
-                overlay.addEventListener("click", (e) => {
-                  if (e.target === overlay) overlay.remove();
-                });
+                overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
               }
 
               const header = document.createElement("div");
@@ -153,21 +176,17 @@
                   <button id="img-close" style="background:#2a2a4a;color:#fff;border:0;padding:8px 10px;border-radius:10px;cursor:pointer;font-size:12px">Cerrar</button>
                 </div>
               `;
-
               const wrap = document.createElement("div");
               wrap.style.cssText = "display:flex;align-items:center;justify-content:center;width:100%;height:calc(100% - 76px);background:#0b0b15;";
-
               const img = document.createElement("img");
               img.id = "img-view";
               img.alt = alt;
               img.style.cssText = "max-width:100%;max-height:100%;object-fit:contain;display:block;";
-
               const cap = document.createElement("div");
               cap.id = "img-caption";
               cap.style.cssText = "padding:8px 12px;background:#0f0f1f;color:#cfd2ff;font-size:12px;font-family:Poppins,system-ui,sans-serif;";
 
               wrap.appendChild(img);
-
               dlg.appendChild(header);
               dlg.appendChild(wrap);
               dlg.appendChild(cap);
@@ -177,8 +196,7 @@
                 else document.getElementById("img-overlay")?.remove();
               };
               const a = header.querySelector("#img-open-new");
-              a.target = "_blank";
-              a.rel = "noopener noreferrer";
+              a.target = "_blank"; a.rel = "noopener noreferrer";
             }
 
             dlg.querySelector("#img-title").textContent = title;
@@ -265,9 +283,7 @@
               kDlg.style.cssText = "width:min(900px,96vw);height:min(80vh,720px);border:none;border-radius:14px;overflow:hidden;background:#0b0b15;box-shadow:0 10px 40px rgba(0,0,0,.35);";
               kOverlay.appendChild(kDlg);
 
-              kOverlay.addEventListener("click", (e) => {
-                if (e.target === kOverlay) pauseKaraoke();
-              });
+              kOverlay.addEventListener("click", (e) => { if (e.target === kOverlay) pauseKaraoke(); });
             }
 
             const header = document.createElement("div");
@@ -275,12 +291,11 @@
             header.innerHTML = `
               <div style="font-weight:700;font-size:14px">Karaoke – Borí Cano</div>
               <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-                <button id="k-play"  style="background:#36C; color:#fff; border:0; padding:8px 10px; border-radius:10px; cursor:pointer; font-size:12px; display:flex; gap:6px; align-items:center">${PLAY_SVG}<span>Play</span></button>
+                <button id="k-play"  style="background:#36C;color:#fff;border:0;padding:8px 10px;border-radius:10px;cursor:pointer;font-size:12px;display:flex;gap:6px;align-items:center">${PLAY_SVG}<span>Play</span></button>
                 <button id="k-pause" style="background:#2a2a4a;color:#fff;border:0;padding:8px 10px;border-radius:10px;cursor:pointer;font-size:12px;display:flex;gap:6px;align-items:center">${PAUSE_SVG}<span>Pause</span></button>
                 <button id="k-stop"  style="background:#8a2be2;color:#fff;border:0;padding:8px 10px;border-radius:10px;cursor:pointer;font-size:12px;display:flex;gap:6px;align-items:center">${STOP_SVG}<span>Stop</span></button>
               </div>
             `;
-
             const body = document.createElement("div");
             body.style.cssText = "display:flex;align-items:flex-start;justify-content:center;width:100%;height:calc(100% - 56px);background:#0b0b15;padding:18px;";
 
@@ -321,12 +336,11 @@
             ensureKaraokeDialog();
             if (typeof kDlg.showModal === "function" && !kDlg.open) kDlg.showModal();
             else if (kOverlay) kOverlay.style.display = "flex";
-
             if (autoplay) playKaraoke();
             return { ok: true };
           }
 
-          // ---------- Desbloqueo de audio ----------
+          // --- Audio unlock ---
           let primed = false;
           async function primeAudioOnce() {
             if (primed) return true;
@@ -344,30 +358,18 @@
             }
           }
 
-          // ---------- Letras ----------
-          function resetLyrics() {
-            currentLyricIndex = -1;
-            if (kLyrics) kLyrics.innerHTML = "";
-          }
-
+          // --- Letras ---
+          function resetLyrics() { currentLyricIndex = -1; if (kLyrics) kLyrics.innerHTML = ""; }
           function updateLyrics() {
             if (!kLyrics) return;
-            const t = audio.currentTime;
-            let idx = -1;
-            for (let i = 0; i < lyricsData.length; i++) {
-              if (t >= lyricsData[i].time) idx = i; else break;
-            }
+            const t = audio.currentTime; let idx = -1;
+            for (let i = 0; i < lyricsData.length; i++) { if (t >= lyricsData[i].time) idx = i; else break; }
             if (idx !== currentLyricIndex) {
-              currentLyricIndex = idx;
-              kLyrics.innerHTML = "";
-              if (idx < 0) return;
+              currentLyricIndex = idx; kLyrics.innerHTML = ""; if (idx < 0) return;
               const make = (line, active) => {
                 const p = document.createElement("p");
-                p.textContent = line.text;
-                p.style.cssText = "margin:0 0 8px";
-                if (active) p.style.cssText += ";font-weight:700;color:#E4DEFF";
-                else p.style.cssText += ";opacity:.8";
-                return p;
+                p.textContent = line.text; p.style.cssText = "margin:0 0 8px";
+                p.style.cssText += active ? ";font-weight:700;color:#E4DEFF" : ";opacity:.8"; return p;
               };
               const cur = lyricsData[idx];
               if (cur && cur.text) {
@@ -377,24 +379,18 @@
               }
             }
           }
-
           audio.addEventListener("timeupdate", updateLyrics);
           audio.addEventListener("ended", () => { stopKaraoke(); });
 
-          // ---------- Controles ----------
+          // --- Controles ---
           async function playKaraoke() {
             ensureKaraokeDialog();
             const okPrime = await primeAudioOnce();
-            if (!okPrime) {
-              nudge.style.display = "block";
-              return false;
-            }
+            if (!okPrime) { nudge.style.display = "block"; return false; }
             nudge.style.display = "none";
             try {
               await audio.play();
-              btnPlay.disabled = true;
-              btnPause.disabled = false;
-              btnStop.disabled = false;
+              btnPlay.disabled = true; btnPause.disabled = false; btnStop.disabled = false;
               return true;
             } catch (e) {
               console.error("[karaoke play] error:", e);
@@ -402,22 +398,8 @@
               return false;
             }
           }
-
-          function pauseKaraoke() {
-            audio.pause();
-            btnPlay && (btnPlay.disabled = false);
-            btnPause && (btnPause.disabled = true);
-            return true;
-          }
-
-          function stopKaraoke() {
-            audio.pause();
-            audio.currentTime = 0;
-            resetLyrics();
-            btnPlay && (btnPlay.disabled = false);
-            btnPause && (btnPause.disabled = true);
-            return true;
-          }
+          function pauseKaraoke() { audio.pause(); btnPlay && (btnPlay.disabled = false); btnPause && (btnPause.disabled = true); return true; }
+          function stopKaraoke()  { audio.pause(); audio.currentTime = 0; resetLyrics(); btnPlay && (btnPlay.disabled = false); btnPause && (btnPause.disabled = true); return true; }
 
           // Exponer para client tools
           window.__boriKaraoke = { open: openKaraokeDialog, play: playKaraoke, pause: pauseKaraoke, stop: stopKaraoke };
@@ -425,9 +407,7 @@
           /* ==========================================================
            *  REGISTRO TEMPRANO DE CLIENT TOOLS + FALLBACK EN :call
            * ========================================================== */
-          function getWidgetNow() {
-            return document.querySelector("elevenlabs-convai");
-          }
+          function getWidgetNow() { return document.querySelector("elevenlabs-convai"); }
           function onWidgetReady(cb) {
             const w = getWidgetNow();
             if (w) return cb(w);
@@ -439,28 +419,28 @@
           }
 
           function toolOpenMap() {
-            try { const r = openMapDialog({}); return { ok: !!r?.ok }; }
-            catch (e) { console.error("[tool openIsletaMapEmbed] error:", e); return { ok: false, error: String(e) }; }
+            try { const r = openMapDialog({}); toast("tool openIsletaMapEmbed called","ok"); return { ok: !!r?.ok }; }
+            catch (e) { toast("map tool error: "+e,"err"); return { ok: false, error: String(e) }; }
           }
           function toolShowImageModal(args = {}) {
-            try { const r = openImageDialog(args); return { ok: !!r?.ok, url: r?.url || args?.url }; }
-            catch (e) { console.error("[tool showImageModal] error:", e); return { ok: false, error: String(e) }; }
+            try { const r = openImageDialog(args); toast("tool showImageModal called","ok"); return { ok: !!r?.ok, url: r?.url || args?.url }; }
+            catch (e) { toast("image tool error: "+e,"err"); return { ok: false, error: String(e) }; }
           }
           async function toolOpenKaraoke() {
-            try { const r = window.__boriKaraoke?.open({ autoplay:false }) || { ok:true }; return { ok: !!r?.ok }; }
-            catch (e) { console.error("[tool openKaraoke] error:", e); return { ok:false, error:String(e) }; }
+            try { const r = window.__boriKaraoke?.open({ autoplay:false }) || { ok:true }; toast("tool openKaraoke called","ok"); return { ok: !!r?.ok }; }
+            catch (e) { toast("openKaraoke error: "+e,"err"); return { ok:false, error:String(e) }; }
           }
           async function toolPlayKaraoke() {
-            try { window.__boriKaraoke?.open({ autoplay:false }); const ok = await window.__boriKaraoke?.play(); return { ok: !!ok }; }
-            catch (e) { console.error("[tool playKaraoke] error:", e); return { ok:false, error:String(e) }; }
+            try { window.__boriKaraoke?.open({ autoplay:false }); const ok = await window.__boriKaraoke?.play(); toast("tool playKaraoke -> "+ok,"ok"); return { ok: !!ok }; }
+            catch (e) { toast("playKaraoke error: "+e,"err"); return { ok:false, error:String(e) }; }
           }
           async function toolPauseKaraoke() {
-            try { return { ok: !!window.__boriKaraoke?.pause() }; }
-            catch (e) { console.error("[tool pauseKaraoke] error:", e); return { ok:false, error:String(e) }; }
+            try { const ok = !!window.__boriKaraoke?.pause(); toast("tool pauseKaraoke","ok"); return { ok }; }
+            catch (e) { toast("pauseKaraoke error: "+e,"err"); return { ok:false, error:String(e) }; }
           }
           async function toolStopKaraoke() {
-            try { return { ok: !!window.__boriKaraoke?.stop() }; }
-            catch (e) { console.error("[tool stopKaraoke] error:", e); return { ok:false, error:String(e) }; }
+            try { const ok = !!window.__boriKaraoke?.stop(); toast("tool stopKaraoke","ok"); return { ok }; }
+            catch (e) { toast("stopKaraoke error: "+e,"err"); return { ok:false, error:String(e) }; }
           }
 
           const tools = {
@@ -480,28 +460,34 @@
 
           // Registro temprano
           onWidgetReady((widget) => {
+            // Inyección en cada call (por si el widget vuelve a crear config)
             widget.addEventListener("elevenlabs-convai:call", (event) => {
               const cfg = event?.detail?.config || {};
               cfg.clientTools = { ...(cfg.clientTools || {}), ...tools };
               event.detail.config = cfg;
+              toast("clientTools attached (event)","warn",2000);
             });
             try {
-              if (typeof widget.setConfig === "function") widget.setConfig({ clientTools: tools });
+              if (typeof widget.setConfig === "function") {
+                widget.setConfig({ clientTools: tools });
+                toast("clientTools set via setConfig","warn",2000);
+              }
             } catch {}
-            console.log("[convai] clientTools registrados temprano");
+            toast("[convai] ready","ok",1500);
           });
 
-          // Fallback: por si llega un :call antes de que el widget esté listo
+          // Fallback: si llega un :call antes de onWidgetReady
           window.addEventListener("elevenlabs-convai:call", (event) => {
             const cfg = event?.detail?.config || {};
             cfg.clientTools = { ...(cfg.clientTools || {}), ...tools };
             event.detail.config = cfg;
-            console.log("[convai] clientTools inyectados en :call");
+            toast("clientTools attached (window)","warn",2000);
           });
+
         })();
       </script>
     </main>
 
-    <div class="version-label">V3.4.0</div>
+    <div class="version-label">V3.5.0</div>
   </body>
 </html>
