@@ -11,20 +11,27 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet" />
 
     <style>
-      /* Toasts de debug visibles en móvil/PC */
-      .toast {
-        position: fixed; right: 12px; top: 12px; z-index: 2147483647;
-        display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+      /* Estilos mínimos para los modales */
+      dialog.bori-modal{
+        width:min(960px,96vw);height:min(80vh,720px);
+        border:none;border-radius:14px;padding:0;overflow:hidden;
+        background:#0b0b15;color:#fff;box-shadow:0 10px 40px rgba(0,0,0,.35)
       }
-      .toast > div {
-        pointer-events: auto;
-        background: #141428; color: #fff; border: 1px solid #2b2b4b;
-        padding: 8px 10px; border-radius: 10px; font: 12px/1.35 Poppins, system-ui, sans-serif;
-        box-shadow: 0 6px 24px rgba(0,0,0,.25);
+      .bori-modal__bar{
+        display:flex;align-items:center;justify-content:space-between;
+        padding:10px 12px;background:#141428;font-family:Poppins,system-ui,sans-serif
       }
-      .toast .ok { border-color: #2e7d32; }
-      .toast .warn { border-color: #cc8f00; }
-      .toast .err { border-color: #b00020; }
+      .bori-modal__bar .btn{
+        background:#2a2a4a;color:#fff;border:0;padding:8px 10px;border-radius:10px;cursor:pointer;font-size:12px
+      }
+      .bori-modal__bar .btn.primary{background:#5F2EEA}
+      .bori-modal__body{height:calc(100% - 44px)}
+
+      .karaoke-wrap{display:flex;flex-direction:column;gap:12px;height:100%;padding:16px}
+      .karaoke-ctrls{display:flex;gap:8px;flex-wrap:wrap}
+      .karaoke-lyrics{flex:1;overflow:auto;line-height:1.55}
+      .karaoke-lyrics p{margin:0 0 8px;opacity:.85}
+      .karaoke-lyrics p.active{font-weight:700;color:#E4DEFF;opacity:1}
     </style>
   </head>
 
@@ -42,183 +49,65 @@
       <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
 
       <script>
-        (() => {
-          const DEBUG_MODE = true;
+        (function () {
+          /* ========================
+           *  MODAL DE IMAGEN
+           * ======================== */
+          function ensureImageModal () {
+            let dlg = document.getElementById('img-dialog');
+            if (dlg) return dlg;
 
-          /* ---------- Toasts visibles ---------- */
-          const toastRoot = document.createElement('div');
-          toastRoot.className = 'toast';
-          document.addEventListener('DOMContentLoaded', () => document.body.appendChild(toastRoot));
-          function toast(msg, kind='ok', ttl=3500) {
-            if (!DEBUG_MODE) return;
-            const el = document.createElement('div');
-            el.className = kind;
-            el.textContent = msg;
-            toastRoot.appendChild(el);
-            setTimeout(() => el.remove(), ttl);
+            dlg = document.createElement('dialog');
+            dlg.id = 'img-dialog';
+            dlg.className = 'bori-modal';
+
+            const bar = document.createElement('div');
+            bar.className = 'bori-modal__bar';
+            bar.innerHTML = `
+              <div id="img-title" style="font-weight:700;font-size:14px">Imagen</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <a id="img-open" class="btn primary" target="_blank" rel="noopener noreferrer">Abrir</a>
+                <button id="img-close" class="btn">Cerrar</button>
+              </div>
+            `;
+
+            const body = document.createElement('div');
+            body.className = 'bori-modal__body';
+            body.innerHTML = `
+              <div style="display:flex;align-items:center;justify-content:center;height:100%;background:#0b0b15">
+                <img id="img-view" style="max-width:100%;max-height:100%;object-fit:contain" alt="Imagen"/>
+              </div>
+              <div id="img-caption" style="padding:8px 12px;background:#0f0f1f;color:#cfd2ff;font-size:12px;font-family:Poppins,system-ui,sans-serif;"></div>
+            `;
+
+            dlg.appendChild(bar);
+            dlg.appendChild(body);
+            document.body.appendChild(dlg);
+
+            dlg.querySelector('#img-close').addEventListener('click', () => dlg.close('user'));
+            return dlg;
+          }
+
+          function openImageModal ({ url, title='Imagen', caption='', alt='Imagen' } = {}) {
+            if (!url || typeof url !== 'string') return { ok:false, error:'missing url' };
+            const dlg = ensureImageModal();
+            dlg.querySelector('#img-title').textContent = title || 'Imagen';
+            dlg.querySelector('#img-view').src = url;
+            dlg.querySelector('#img-view').alt = alt || title || 'Imagen';
+            dlg.querySelector('#img-open').href = url;
+            dlg.querySelector('#img-caption').textContent = caption || '';
+            if (!dlg.open && typeof dlg.showModal === 'function') dlg.showModal();
+            return { ok:true, url };
           }
 
           /* ========================
-           *  MAPA EMBEBIDO (modal)
+           *  KARAOKE (modal + ctrl)
            * ======================== */
-          const DEFAULT_LAT = 18.340183178224542;
-          const DEFAULT_LNG = -65.61933532856209;
-          const DEFAULT_ZOOM = 18;
-          const DEFAULT_BASEMAP = "satellite";
-
-          const buildEmbedMap = ({ lat = DEFAULT_LAT, lng = DEFAULT_LNG, zoom = DEFAULT_ZOOM, basemap = DEFAULT_BASEMAP } = {}) => {
-            const t = basemap === "satellite" ? "k" : "m";
-            return `https://www.google.com/maps?q=${lat},${lng}&t=${t}&z=${zoom}&output=embed&hl=es`;
-          };
-          const buildExternalMap = ({ lat = DEFAULT_LAT, lng = DEFAULT_LNG, zoom = DEFAULT_ZOOM, basemap = DEFAULT_BASEMAP } = {}) =>
-            `https://www.google.com/maps/@?api=1&map_action=map&center=${lat}%2C${lng}&zoom=${zoom}&basemap=${encodeURIComponent(basemap)}`;
-
-          function openMapDialog({ lat = DEFAULT_LAT, lng = DEFAULT_LNG, zoom = DEFAULT_ZOOM, basemap = DEFAULT_BASEMAP, title = "Mapa – Isleta Marina" } = {}) {
-            const supportsDialog = typeof HTMLDialogElement !== "undefined";
-            let dlg = document.getElementById("map-dialog");
-            let overlay;
-
-            if (!dlg) {
-              if (supportsDialog) {
-                dlg = document.createElement("dialog");
-                dlg.id = "map-dialog";
-                dlg.style.cssText = "width:min(960px,96vw);height:min(80vh,720px);border:none;border-radius:14px;padding:0;overflow:hidden;background:#0b0b15;";
-                document.body.appendChild(dlg);
-              } else {
-                overlay = document.createElement("div");
-                overlay.id = "map-overlay";
-                overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;";
-                document.body.appendChild(overlay);
-
-                dlg = document.createElement("div");
-                dlg.id = "map-dialog";
-                dlg.style.cssText = "width:min(960px,96vw);height:min(80vh,720px);border:none;border-radius:14px;overflow:hidden;background:#0b0b15;box-shadow:0 10px 40px rgba(0,0,0,.35);";
-                overlay.appendChild(dlg);
-
-                overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
-              }
-
-              const header = document.createElement("div");
-              header.style.cssText = "display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#141428;color:#fff;font-family:Poppins,system-ui,sans-serif";
-              header.innerHTML = `
-                <div style="font-weight:700;font-size:14px">${title}</div>
-                <div style="display:flex;gap:8px;flex-wrap:wrap">
-                  <a id="btn-map-open" style="text-decoration:none;background:#5F2EEA;color:#fff;padding:8px 10px;border-radius:10px;font-size:12px">Abrir en Google Maps</a>
-                  <button id="map-close" style="background:#2a2a4a;color:#fff;border:0;padding:8px 10px;border-radius:10px;cursor:pointer;font-size:12px">Cerrar</button>
-                </div>
-              `;
-              const iframe = document.createElement("iframe");
-              iframe.id = "map-iframe";
-              iframe.style.cssText = "width:100%;height:calc(100% - 44px);border:0;";
-              iframe.setAttribute("allowfullscreen", "");
-              iframe.setAttribute("referrerpolicy", "no-referrer-when-downgrade");
-
-              dlg.appendChild(header);
-              dlg.appendChild(iframe);
-
-              header.querySelector("#map-close").onclick = () => {
-                if (supportsDialog) dlg.close("user");
-                else document.getElementById("map-overlay")?.remove();
-              };
-
-              const $open = header.querySelector("#btn-map-open");
-              $open.href = buildExternalMap({});
-              $open.target = "_blank";
-              $open.rel = "noopener noreferrer";
-            }
-
-            dlg.querySelector("#map-iframe").src = buildEmbedMap({ lat, lng, zoom, basemap });
-            const a = dlg.querySelector("#btn-map-open");
-            a.href = buildExternalMap({ lat, lng, zoom, basemap });
-
-            if (typeof dlg.showModal === "function" && !dlg.open) dlg.showModal();
-            else if (document.getElementById("map-overlay")) document.getElementById("map-overlay").style.display = "flex";
-
-            return { ok: true };
-          }
-
-          /* ========================
-           *  IMAGEN EMBEBIDA (modal)
-           * ======================== */
-          function openImageDialog({ url, title = "Vista", caption = "", alt = "Imagen" } = {}) {
-            if (!url || typeof url !== "string") return { ok: false, error: "Missing image URL" };
-
-            const supportsDialog = typeof HTMLDialogElement !== "undefined";
-            let dlg = document.getElementById("img-dialog");
-            let overlay;
-
-            if (!dlg) {
-              if (supportsDialog) {
-                dlg = document.createElement("dialog");
-                dlg.id = "img-dialog";
-                dlg.style.cssText = "width:min(960px,96vw);height:min(80vh,720px);border:none;border-radius:14px;padding:0;overflow:hidden;background:#0b0b15;";
-                document.body.appendChild(dlg);
-              } else {
-                overlay = document.createElement("div");
-                overlay.id = "img-overlay";
-                overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;";
-                document.body.appendChild(overlay);
-
-                dlg = document.createElement("div");
-                dlg.id = "img-dialog";
-                dlg.style.cssText = "width:min(960px,96vw);height:min(80vh,720px);border:none;border-radius:14px;overflow:hidden;background:#0b0b15;box-shadow:0 10px 40px rgba(0,0,0,.35);";
-                overlay.appendChild(dlg);
-
-                overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
-              }
-
-              const header = document.createElement("div");
-              header.style.cssText = "display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#141428;color:#fff;font-family:Poppins,system-ui,sans-serif";
-              header.innerHTML = `
-                <div id="img-title" style="font-weight:700;font-size:14px">${title}</div>
-                <div style="display:flex;gap:8px;flex-wrap:wrap">
-                  <a id="img-open-new" style="text-decoration:none;background:#5F2EEA;color:#fff;padding:8px 10px;border-radius:10px;font-size:12px">Abrir imagen</a>
-                  <button id="img-close" style="background:#2a2a4a;color:#fff;border:0;padding:8px 10px;border-radius:10px;cursor:pointer;font-size:12px">Cerrar</button>
-                </div>
-              `;
-              const wrap = document.createElement("div");
-              wrap.style.cssText = "display:flex;align-items:center;justify-content:center;width:100%;height:calc(100% - 76px);background:#0b0b15;";
-              const img = document.createElement("img");
-              img.id = "img-view";
-              img.alt = alt;
-              img.style.cssText = "max-width:100%;max-height:100%;object-fit:contain;display:block;";
-              const cap = document.createElement("div");
-              cap.id = "img-caption";
-              cap.style.cssText = "padding:8px 12px;background:#0f0f1f;color:#cfd2ff;font-size:12px;font-family:Poppins,system-ui,sans-serif;";
-
-              wrap.appendChild(img);
-              dlg.appendChild(header);
-              dlg.appendChild(wrap);
-              dlg.appendChild(cap);
-
-              header.querySelector("#img-close").onclick = () => {
-                if (supportsDialog) dlg.close("user");
-                else document.getElementById("img-overlay")?.remove();
-              };
-              const a = header.querySelector("#img-open-new");
-              a.target = "_blank"; a.rel = "noopener noreferrer";
-            }
-
-            dlg.querySelector("#img-title").textContent = title;
-            dlg.querySelector("#img-view").src = url;
-            dlg.querySelector("#img-view").alt = alt || title;
-            dlg.querySelector("#img-caption").textContent = caption || "";
-            dlg.querySelector("#img-open-new").href = url;
-
-            if (typeof dlg.showModal === "function" && !dlg.open) dlg.showModal();
-            else if (document.getElementById("img-overlay")) document.getElementById("img-overlay").style.display = "flex";
-
-            return { ok: true, url };
-          }
-
-          /* ========================
-           *  KARAOKE (modal + controles)
-           * ======================== */
-          const audio = document.createElement("audio");
-          audio.id = "background-audio";
-          audio.src = "https://static.wixstatic.com/mp3/86b1c8_a1bd589ba7e547dc8a7a4cd761c40135.mp3";
-          audio.preload = "auto";
-          document.body.appendChild(audio);
+          const karaokeAudio = document.createElement('audio');
+          karaokeAudio.id = 'bori-audio';
+          karaokeAudio.src = 'https://static.wixstatic.com/mp3/86b1c8_a1bd589ba7e547dc8a7a4cd761c40135.mp3';
+          karaokeAudio.preload = 'auto';
+          document.body.appendChild(karaokeAudio);
 
           const lyricsData = [
             { stanza: 0, time: 0.16, text: "Desde el balcón de Vista Pelícano," },
@@ -256,239 +145,120 @@
             { stanza: 9, time: 112.0, text: "" }
           ];
 
-          const PLAY_SVG  = '<svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>';
-          const PAUSE_SVG = '<svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
-          const STOP_SVG  = '<svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M6 6h12v12H6z"/></svg>';
+          let kDlg, kLyrics, currentLyricIdx = -1;
 
-          let kDlg, kOverlay, kLyrics, btnPlay, btnPause, btnStop, nudge;
-          let currentLyricIndex = -1;
+          function ensureKaraokeModal () {
+            if (kDlg) return kDlg;
+            kDlg = document.createElement('dialog');
+            kDlg.id = 'karaoke-dialog';
+            kDlg.className = 'bori-modal';
 
-          function ensureKaraokeDialog() {
-            if (kDlg) return;
-            const supportsDialog = typeof HTMLDialogElement !== "undefined";
+            const bar = document.createElement('div');
+            bar.className = 'bori-modal__bar';
+            bar.innerHTML = `<div style="font-weight:700;font-size:14px">Karaoke – Borí Cano</div><button id="k-close" class="btn">Cerrar</button>`;
 
-            if (supportsDialog) {
-              kDlg = document.createElement("dialog");
-              kDlg.id = "karaoke-dialog";
-              kDlg.style.cssText = "width:min(900px,96vw);height:min(80vh,720px);border:none;border-radius:14px;padding:0;overflow:hidden;background:#0b0b15;";
-              document.body.appendChild(kDlg);
-            } else {
-              kOverlay = document.createElement("div");
-              kOverlay.id = "karaoke-overlay";
-              kOverlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;";
-              document.body.appendChild(kOverlay);
+            const body = document.createElement('div');
+            body.className = 'bori-modal__body';
+            body.innerHTML = `
+              <div class="karaoke-wrap">
+                <div class="karaoke-ctrls">
+                  <button id="k-play"  class="btn">Play</button>
+                  <button id="k-pause" class="btn">Pause</button>
+                  <button id="k-stop"  class="btn">Stop</button>
+                </div>
+                <div id="k-lyrics" class="karaoke-lyrics"></div>
+              </div>`;
 
-              kDlg = document.createElement("div");
-              kDlg.id = "karaoke-dialog";
-              kDlg.style.cssText = "width:min(900px,96vw);height:min(80vh,720px);border:none;border-radius:14px;overflow:hidden;background:#0b0b15;box-shadow:0 10px 40px rgba(0,0,0,.35);";
-              kOverlay.appendChild(kDlg);
+            kDlg.appendChild(bar); kDlg.appendChild(body); document.body.appendChild(kDlg);
 
-              kOverlay.addEventListener("click", (e) => { if (e.target === kOverlay) pauseKaraoke(); });
-            }
+            kLyrics = kDlg.querySelector('#k-lyrics');
+            kDlg.querySelector('#k-close').addEventListener('click', () => kDlg.close('user'));
+            kDlg.querySelector('#k-play').addEventListener('click', () => karaokeAudio.play().catch(()=>{}));
+            kDlg.querySelector('#k-pause').addEventListener('click', () => karaokeAudio.pause());
+            kDlg.querySelector('#k-stop').addEventListener('click', () => { karaokeAudio.pause(); karaokeAudio.currentTime = 0; renderLyrics(-1); });
 
-            const header = document.createElement("div");
-            header.style.cssText = "display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#141428;color:#fff;font-family:Poppins,system-ui,sans-serif";
-            header.innerHTML = `
-              <div style="font-weight:700;font-size:14px">Karaoke – Borí Cano</div>
-              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-                <button id="k-play"  style="background:#36C;color:#fff;border:0;padding:8px 10px;border-radius:10px;cursor:pointer;font-size:12px;display:flex;gap:6px;align-items:center">${PLAY_SVG}<span>Play</span></button>
-                <button id="k-pause" style="background:#2a2a4a;color:#fff;border:0;padding:8px 10px;border-radius:10px;cursor:pointer;font-size:12px;display:flex;gap:6px;align-items:center">${PAUSE_SVG}<span>Pause</span></button>
-                <button id="k-stop"  style="background:#8a2be2;color:#fff;border:0;padding:8px 10px;border-radius:10px;cursor:pointer;font-size:12px;display:flex;gap:6px;align-items:center">${STOP_SVG}<span>Stop</span></button>
-              </div>
-            `;
-            const body = document.createElement("div");
-            body.style.cssText = "display:flex;align-items:flex-start;justify-content:center;width:100%;height:calc(100% - 56px);background:#0b0b15;padding:18px;";
+            karaokeAudio.addEventListener('timeupdate', () => {
+              const t = karaokeAudio.currentTime; let idx = -1;
+              for (let i=0;i<lyricsData.length;i++){ if (t>=lyricsData[i].time) idx=i; else break; }
+              renderLyrics(idx);
+            });
+            karaokeAudio.addEventListener('ended', () => { karaokeAudio.currentTime = 0; renderLyrics(-1); });
 
-            kLyrics = document.createElement("div");
-            kLyrics.id = "k-lyrics";
-            kLyrics.style.cssText = "max-width:780px;width:100%;height:100%;color:#fff;font-family:Poppins,system-ui,sans-serif;line-height:1.55;overflow:auto;";
-            kLyrics.innerHTML = '<p style="opacity:.7">Cuando le des play, aquí se verán las líneas de la canción…</p>';
+            return kDlg;
+          }
 
-            nudge = document.createElement("div");
-            nudge.id = "k-nudge";
-            nudge.style.cssText = "display:none;margin-top:12px;background:#141428;color:#fff;padding:10px 12px;border-radius:10px;font-size:13px";
-            nudge.innerHTML = `
-              Necesitamos un toque para habilitar el audio.
-              <button id="k-enable" style="margin-left:10px;background:#36C;color:#fff;border:0;padding:6px 10px;border-radius:8px;cursor:pointer">Habilitar audio</button>
-            `;
-
-            body.appendChild(kLyrics);
-            body.appendChild(nudge);
-
-            kDlg.appendChild(header);
-            kDlg.appendChild(body);
-
-            btnPlay  = header.querySelector("#k-play");
-            btnPause = header.querySelector("#k-pause");
-            btnStop  = header.querySelector("#k-stop");
-
-            btnPlay.onclick  = () => playKaraoke();
-            btnPause.onclick = () => pauseKaraoke();
-            btnStop.onclick  = () => stopKaraoke();
-
-            body.querySelector("#k-enable").onclick = async () => {
-              await primeAudioOnce();
-              await playKaraoke();
+          function renderLyrics (idx) {
+            if (idx === currentLyricIdx) return;
+            currentLyricIdx = idx; kLyrics.innerHTML = '';
+            if (idx < 0) return;
+            const mk = (line, active) => {
+              const p = document.createElement('p');
+              p.textContent = line.text;
+              if (active) p.classList.add('active');
+              return p;
             };
-          }
-
-          function openKaraokeDialog({ autoplay = false } = {}) {
-            ensureKaraokeDialog();
-            if (typeof kDlg.showModal === "function" && !kDlg.open) kDlg.showModal();
-            else if (kOverlay) kOverlay.style.display = "flex";
-            if (autoplay) playKaraoke();
-            return { ok: true };
-          }
-
-          // --- Audio unlock ---
-          let primed = false;
-          async function primeAudioOnce() {
-            if (primed) return true;
-            try {
-              const wasMuted = audio.muted;
-              audio.muted = true;
-              await audio.play();
-              audio.pause();
-              audio.muted = wasMuted;
-              primed = true;
-              return true;
-            } catch {
-              primed = false;
-              return false;
+            const cur = lyricsData[idx];
+            if (cur && cur.text) {
+              kLyrics.appendChild(mk(cur, true));
+              const next = lyricsData[idx+1];
+              if (next && next.stanza === cur.stanza && next.text) kLyrics.appendChild(mk(next, false));
             }
           }
 
-          // --- Letras ---
-          function resetLyrics() { currentLyricIndex = -1; if (kLyrics) kLyrics.innerHTML = ""; }
-          function updateLyrics() {
-            if (!kLyrics) return;
-            const t = audio.currentTime; let idx = -1;
-            for (let i = 0; i < lyricsData.length; i++) { if (t >= lyricsData[i].time) idx = i; else break; }
-            if (idx !== currentLyricIndex) {
-              currentLyricIndex = idx; kLyrics.innerHTML = ""; if (idx < 0) return;
-              const make = (line, active) => {
-                const p = document.createElement("p");
-                p.textContent = line.text; p.style.cssText = "margin:0 0 8px"; p.style.cssText += active ? ";font-weight:700;color:#E4DEFF" : ";opacity:.8";
-                return p;
-              };
-              const cur = lyricsData[idx];
-              if (cur && cur.text) {
-                kLyrics.appendChild(make(cur, true));
-                const next = lyricsData[idx + 1];
-                if (next && next.stanza === cur.stanza && next.text) kLyrics.appendChild(make(next, false));
-              }
-            }
+          function openKaraokeModal () {
+            ensureKaraokeModal();
+            if (!kDlg.open && typeof kDlg.showModal === 'function') kDlg.showModal();
+            return { ok:true };
           }
-          audio.addEventListener("timeupdate", updateLyrics);
-          audio.addEventListener("ended", () => { stopKaraoke(); });
+          function playKaraoke(){ openKaraokeModal(); return karaokeAudio.play().then(()=>({ok:true})).catch(()=>({ok:false})); }
+          function pauseKaraoke(){ karaokeAudio.pause(); return { ok:true }; }
+          function stopKaraoke(){ karaokeAudio.pause(); karaokeAudio.currentTime=0; renderLyrics(-1); return { ok:true }; }
+          function closeKaraoke(){ if (kDlg?.open) kDlg.close('user'); return { ok:true }; }
 
-          // --- Controles ---
-          async function playKaraoke() {
-            ensureKaraokeDialog();
-            const okPrime = await primeAudioOnce();
-            if (!okPrime) { nudge.style.display = "block"; toast("audio needs user gesture","warn"); return false; }
-            nudge.style.display = "none";
-            try {
-              await audio.play();
-              btnPlay.disabled = true; btnPause.disabled = false; btnStop.disabled = false;
-              return true;
-            } catch (e) {
-              console.error("[karaoke play] error:", e);
-              nudge.style.display = "block";
-              toast("play error: "+e, "err");
-              return false;
-            }
-          }
-          function pauseKaraoke() { audio.pause(); btnPlay && (btnPlay.disabled = false); btnPause && (btnPause.disabled = true); return true; }
-          function stopKaraoke()  { audio.pause(); audio.currentTime = 0; resetLyrics(); btnPlay && (btnPlay.disabled = false); btnPause && (btnPause.disabled = true); return true; }
-          function closeKaraoke() { if (kDlg?.open) kDlg.close("user"); if (kOverlay) kOverlay.style.display = "none"; return true; }
-
-          window.__boriKaraoke = { open: openKaraokeDialog, play: playKaraoke, pause: pauseKaraoke, stop: stopKaraoke, close: closeKaraoke };
-
-          /* ==========================================================
-           *  CLIENT TOOLS: registro robusto + aliases
-           * ========================================================== */
-          function toolOpenMap() {
-            try { const r = openMapDialog({}); toast("tool openIsletaMap* called","ok"); return { ok: !!r?.ok }; }
-            catch (e) { toast("map tool error: "+e,"err"); return { ok: false, error: String(e) }; }
-          }
-          function toolShowImageModal(args = {}) {
-            try { const r = openImageDialog(args); toast("tool showImageModal called","ok"); return { ok: !!r?.ok, url: r?.url || args?.url }; }
-            catch (e) { toast("image tool error: "+e,"err"); return { ok: false, error: String(e) }; }
-          }
-          async function toolOpenKaraoke()  { try { const r = window.__boriKaraoke?.open({ autoplay:false }) || { ok:true }; toast("tool openKaraoke","ok"); return { ok: !!r?.ok }; } catch (e) { toast("openKaraoke error: "+e,"err"); return { ok:false, error:String(e) }; } }
-          async function toolPlayKaraoke()  { try { window.__boriKaraoke?.open({ autoplay:false }); const ok = await window.__boriKaraoke?.play(); toast("tool playKaraoke -> "+ok,"ok"); return { ok: !!ok }; } catch (e) { toast("playKaraoke error: "+e,"err"); return { ok:false, error:String(e) }; } }
-          async function toolPauseKaraoke() { try { const ok = !!window.__boriKaraoke?.pause(); toast("tool pauseKaraoke","ok"); return { ok }; } catch (e) { toast("pauseKaraoke error: "+e,"err"); return { ok:false, error:String(e) }; } }
-          async function toolStopKaraoke()  { try { const ok = !!window.__boriKaraoke?.stop();  toast("tool stopKaraoke","ok");  return { ok }; } catch (e) { toast("stopKaraoke error: "+e,"err");  return { ok:false, error:String(e) }; } }
-          async function toolCloseKaraoke() { try { const ok = !!window.__boriKaraoke?.close(); toast("tool closeKaraoke","ok"); return { ok }; } catch (e) { toast("closeKaraoke error: "+e,"err"); return { ok:false, error:String(e) }; } }
-
-          // Paquete de tools con ALIASES
-          const tools = {
-            // Map (todos los nombres posibles que pueda usar el LLM)
-            openIsletaMap: toolOpenMap,
-            open_isleta_map: toolOpenMap,
-            openIsletaMapEmbed: toolOpenMap,
-            showMap: toolOpenMap,
-
-            // Image
-            showImageModal: toolShowImageModal,
-
-            // Karaoke (nombres alternos)
-            openKaraoke:  toolOpenKaraoke,
-            karaokeOpen:  toolOpenKaraoke,
-            startKaraoke: toolOpenKaraoke,
-            playKaraoke:  toolPlayKaraoke,
-            pauseKaraoke: toolPauseKaraoke,
-            stopKaraoke:  toolStopKaraoke,
-            closeKaraoke: toolCloseKaraoke,
+          /* ========================
+           *  REGISTRO DE CLIENT TOOLS
+           * ======================== */
+          const clientTools = {
+            // Imagen
+            showImageModal: ({ url, title, caption }) => openImageModal({ url, title, caption }),
+            // Karaoke
+            openKaraoke:  () => openKaraokeModal(),
+            karaokeOpen:  () => openKaraokeModal(),
+            startKaraoke: () => openKaraokeModal(),
+            playKaraoke:  () => playKaraoke(),
+            pauseKaraoke: () => pauseKaraoke(),
+            stopKaraoke:  () => stopKaraoke(),
+            closeKaraoke: () => closeKaraoke(),
           };
 
-          // Funciones de registro
-          function getWidget() { return document.querySelector("elevenlabs-convai"); }
-          function registerClientTools(widget) {
-            if (!widget) return;
+          function tryRegisterClientTools(tries=0) {
+            const widget = document.querySelector('elevenlabs-convai');
+            if (!widget) { if (tries<30) setTimeout(()=>tryRegisterClientTools(tries+1), 250); return; }
             try {
-              // 1) Método documentado
-              if (typeof widget.setConfig === "function") {
-                widget.setConfig({ clientTools: { ...(widget.clientTools || {}), ...tools } });
-                toast("clientTools set via setConfig","warn",2000);
+              if (typeof widget.setConfig === 'function') {
+                widget.setConfig({ clientTools: { ...(widget.clientTools||{}), ...clientTools } });
+              } else {
+                widget.clientTools = { ...(widget.clientTools||{}), ...clientTools };
               }
-            } catch {}
-            try {
-              // 2) Propiedad directa (a veces el widget la lee)
-              widget.clientTools = { ...(widget.clientTools || {}), ...tools };
-              toast("clientTools set on element","warn",2000);
-            } catch {}
+              // Fallback defensivo: asegurar en el primer call
+              window.addEventListener('elevenlabs-convai:call', (ev) => {
+                const cfg = ev?.detail?.config || {};
+                cfg.clientTools = { ...(cfg.clientTools||{}), ...clientTools };
+                ev.detail.config = cfg;
+              }, { once:true });
+            } catch (e) {
+              if (tries<30) setTimeout(()=>tryRegisterClientTools(tries+1), 250);
+            }
           }
-
-          // Registrar al estar listo
-          const mo = new MutationObserver(() => {
-            const w = getWidget();
-            if (w) { registerClientTools(w); }
-          });
-          mo.observe(document.documentElement, { childList: true, subtree: true });
-
-          // Refuerzo: reintentos por si el widget se reconfigura internamente
-          let retries = 0;
-          const iv = setInterval(() => {
-            const w = getWidget();
-            if (w) registerClientTools(w);
-            if (++retries >= 10) clearInterval(iv); // ~10s
-          }, 1000);
-
-          // Fallback: cada llamada nos da chance de inyectar antes de resolver el tool
-          window.addEventListener("elevenlabs-convai:call", (event) => {
-            const cfg = event?.detail?.config || {};
-            cfg.clientTools = { ...(cfg.clientTools || {}), ...tools };
-            event.detail.config = cfg;
-            toast("clientTools attached (window:event)","warn",1500);
-          });
-
-          /* ===== Fin setup ===== */
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', tryRegisterClientTools);
+          } else {
+            tryRegisterClientTools();
+          }
         })();
       </script>
     </main>
 
-    <div class="version-label">V3.5.1</div>
+    <div class="version-label">V3.6.1</div>
   </body>
 </html>
