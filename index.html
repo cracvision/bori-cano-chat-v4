@@ -25,7 +25,7 @@
       <elevenlabs-convai agent-id="agent_0301k2g45tvaere8gnrgvbj9f89k"></elevenlabs-convai>
       <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
 
-      <!-- Client Tools: mapa, imagen y KARAOKE (modal con controles) -->
+      <!-- Modales y Client Tools (mapa, imagen y karaoke) -->
       <script>
         (() => {
           /* ========================
@@ -287,7 +287,7 @@
             kLyrics = document.createElement("div");
             kLyrics.id = "k-lyrics";
             kLyrics.style.cssText = "max-width:780px;width:100%;height:100%;color:#fff;font-family:Poppins,system-ui,sans-serif;line-height:1.55;overflow:auto;";
-            kLyrics.innerHTML = '<p style="opacity:.7">Cuando le de play, aquí se verán las líneas de la canción…</p>';
+            kLyrics.innerHTML = '<p style="opacity:.7">Cuando le des play, aquí se verán las líneas de la canción…</p>';
 
             nudge = document.createElement("div");
             nudge.id = "k-nudge";
@@ -379,9 +379,7 @@
           }
 
           audio.addEventListener("timeupdate", updateLyrics);
-          audio.addEventListener("ended", () => {
-            stopKaraoke();
-          });
+          audio.addEventListener("ended", () => { stopKaraoke(); });
 
           // ---------- Controles ----------
           async function playKaraoke() {
@@ -398,7 +396,8 @@
               btnPause.disabled = false;
               btnStop.disabled = false;
               return true;
-            } catch {
+            } catch (e) {
+              console.error("[karaoke play] error:", e);
               nudge.style.display = "block";
               return false;
             }
@@ -423,36 +422,86 @@
           // Exponer para client tools
           window.__boriKaraoke = { open: openKaraokeDialog, play: playKaraoke, pause: pauseKaraoke, stop: stopKaraoke };
 
-          /* ========================
-           *  Registrar Client Tools
-           * ======================== */
+          /* ==========================================================
+           *  REGISTRO TEMPRANO DE CLIENT TOOLS + FALLBACK EN :call
+           * ========================================================== */
+          function getWidgetNow() {
+            return document.querySelector("elevenlabs-convai");
+          }
+          function onWidgetReady(cb) {
+            const w = getWidgetNow();
+            if (w) return cb(w);
+            const mo = new MutationObserver(() => {
+              const w2 = getWidgetNow();
+              if (w2) { mo.disconnect(); cb(w2); }
+            });
+            mo.observe(document.documentElement, { childList: true, subtree: true });
+          }
+
+          function toolOpenMap() {
+            try { const r = openMapDialog({}); return { ok: !!r?.ok }; }
+            catch (e) { console.error("[tool openIsletaMapEmbed] error:", e); return { ok: false, error: String(e) }; }
+          }
+          function toolShowImageModal(args = {}) {
+            try { const r = openImageDialog(args); return { ok: !!r?.ok, url: r?.url || args?.url }; }
+            catch (e) { console.error("[tool showImageModal] error:", e); return { ok: false, error: String(e) }; }
+          }
+          async function toolOpenKaraoke() {
+            try { const r = window.__boriKaraoke?.open({ autoplay:false }) || { ok:true }; return { ok: !!r?.ok }; }
+            catch (e) { console.error("[tool openKaraoke] error:", e); return { ok:false, error:String(e) }; }
+          }
+          async function toolPlayKaraoke() {
+            try { window.__boriKaraoke?.open({ autoplay:false }); const ok = await window.__boriKaraoke?.play(); return { ok: !!ok }; }
+            catch (e) { console.error("[tool playKaraoke] error:", e); return { ok:false, error:String(e) }; }
+          }
+          async function toolPauseKaraoke() {
+            try { return { ok: !!window.__boriKaraoke?.pause() }; }
+            catch (e) { console.error("[tool pauseKaraoke] error:", e); return { ok:false, error:String(e) }; }
+          }
+          async function toolStopKaraoke() {
+            try { return { ok: !!window.__boriKaraoke?.stop() }; }
+            catch (e) { console.error("[tool stopKaraoke] error:", e); return { ok:false, error:String(e) }; }
+          }
+
+          const tools = {
+            // Map
+            openIsletaMapEmbed: toolOpenMap,
+            showMap: toolOpenMap, // alias
+
+            // Image
+            showImageModal: toolShowImageModal,
+
+            // Karaoke
+            openKaraoke:  toolOpenKaraoke,
+            playKaraoke:  toolPlayKaraoke,
+            pauseKaraoke: toolPauseKaraoke,
+            stopKaraoke:  toolStopKaraoke,
+          };
+
+          // Registro temprano
+          onWidgetReady((widget) => {
+            widget.addEventListener("elevenlabs-convai:call", (event) => {
+              const cfg = event?.detail?.config || {};
+              cfg.clientTools = { ...(cfg.clientTools || {}), ...tools };
+              event.detail.config = cfg;
+            });
+            try {
+              if (typeof widget.setConfig === "function") widget.setConfig({ clientTools: tools });
+            } catch {}
+            console.log("[convai] clientTools registrados temprano");
+          });
+
+          // Fallback: por si llega un :call antes de que el widget esté listo
           window.addEventListener("elevenlabs-convai:call", (event) => {
-            const cfg = event.detail?.config || {};
-            cfg.clientTools = {
-              ...(cfg.clientTools || {}),
-
-              // Map
-              openIsletaMapEmbed: () => openMapDialog({}),
-
-              // Image
-              showImageModal: ({ url, title, caption }) => openImageDialog({ url, title, caption }),
-
-              // Karaoke
-              openKaraoke: () => { openKaraokeDialog({ autoplay: false }); return { ok: true }; },
-              playKaraoke: async () => {
-                openKaraokeDialog({ autoplay: false });
-                const ok = await playKaraoke();
-                return { ok };
-              },
-              pauseKaraoke: async () => ({ ok: pauseKaraoke() }),
-              stopKaraoke:  async () => ({ ok: stopKaraoke() }),
-            };
+            const cfg = event?.detail?.config || {};
+            cfg.clientTools = { ...(cfg.clientTools || {}), ...tools };
             event.detail.config = cfg;
+            console.log("[convai] clientTools inyectados en :call");
           });
         })();
       </script>
     </main>
 
-    <div class="version-label">V3.3.1</div>
+    <div class="version-label">V3.4.0</div>
   </body>
 </html>
