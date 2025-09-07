@@ -8,48 +8,24 @@
     <link rel="stylesheet" href="index.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet" />
   </head>
 
   <body>
-    <!-- Header -->
+    <!-- Header (sin botón ni logo para que el karaoke sea sorpresa) -->
     <header class="app-header">
-      <div class="header-left">
-        <button
-          id="play-pause-button"
-          class="audio-button"
-          aria-label="Reproducir música"
-        ></button>
-
-        <img
-          src="https://static.wixstatic.com/media/86b1c8_2d816491cf534b53b2b2bac9ac0a558f~mv2.png"
-          alt="Logo de Borí Cano"
-          class="header-logo"
-        />
-      </div>
-
-      <div class="title-container">
+      <div class="title-container" style="margin-left:0">
         <h1>Borí Cano Chat</h1>
         <p>¡Wepa panita!</p>
       </div>
     </header>
 
-    <!-- Contenedor para karaoke -->
-    <div id="lyrics-container"></div>
-
     <main>
       <!-- ElevenLabs Conversational AI Widget -->
       <elevenlabs-convai agent-id="agent_0301k2g45tvaere8gnrgvbj9f89k"></elevenlabs-convai>
-      <script
-        src="https://unpkg.com/@elevenlabs/convai-widget-embed"
-        async
-        type="text/javascript"
-      ></script>
+      <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
 
-      <!-- Client Tools: mapa embebido + imagen embebida (sin popups) -->
+      <!-- Client Tools: mapa, imagen y KARAOKE (modal con controles) -->
       <script>
         (() => {
           /* ========================
@@ -60,37 +36,15 @@
           const DEFAULT_ZOOM = 18;
           const DEFAULT_BASEMAP = "satellite";
 
-          const UA = navigator.userAgent || "";
-          const isIOS = /iPad|iPhone|iPod/.test(UA);
-          const isAndroid = /Android/.test(UA);
-
-          const buildEmbedMap = ({
-            lat = DEFAULT_LAT,
-            lng = DEFAULT_LNG,
-            zoom = DEFAULT_ZOOM,
-            basemap = DEFAULT_BASEMAP,
-          } = {}) => {
+          const buildEmbedMap = ({ lat = DEFAULT_LAT, lng = DEFAULT_LNG, zoom = DEFAULT_ZOOM, basemap = DEFAULT_BASEMAP } = {}) => {
             const t = basemap === "satellite" ? "k" : "m";
             return `https://www.google.com/maps?q=${lat},${lng}&t=${t}&z=${zoom}&output=embed&hl=es`;
           };
 
-          const buildExternalMap = ({
-            lat = DEFAULT_LAT,
-            lng = DEFAULT_LNG,
-            zoom = DEFAULT_ZOOM,
-            basemap = DEFAULT_BASEMAP,
-          } = {}) =>
-            `https://www.google.com/maps/@?api=1&map_action=map&center=${lat}%2C${lng}&zoom=${zoom}&basemap=${encodeURIComponent(
-              basemap
-            )}`;
+          const buildExternalMap = ({ lat = DEFAULT_LAT, lng = DEFAULT_LNG, zoom = DEFAULT_ZOOM, basemap = DEFAULT_BASEMAP } = {}) =>
+            `https://www.google.com/maps/@?api=1&map_action=map&center=${lat}%2C${lng}&zoom=${zoom}&basemap=${encodeURIComponent(basemap)}`;
 
-          function openMapDialog({
-            lat = DEFAULT_LAT,
-            lng = DEFAULT_LNG,
-            zoom = DEFAULT_ZOOM,
-            basemap = DEFAULT_BASEMAP,
-            title = "Mapa – Isleta Marina",
-          } = {}) {
+          function openMapDialog({ lat = DEFAULT_LAT, lng = DEFAULT_LNG, zoom = DEFAULT_ZOOM, basemap = DEFAULT_BASEMAP, title = "Mapa – Isleta Marina" } = {}) {
             const supportsDialog = typeof HTMLDialogElement !== "undefined";
             let dlg = document.getElementById("map-dialog");
             let overlay;
@@ -99,20 +53,17 @@
               if (supportsDialog) {
                 dlg = document.createElement("dialog");
                 dlg.id = "map-dialog";
-                dlg.style.cssText =
-                  "width:min(960px,96vw);height:min(80vh,720px);border:none;border-radius:14px;padding:0;overflow:hidden;background:#0b0b15;";
+                dlg.style.cssText = "width:min(960px,96vw);height:min(80vh,720px);border:none;border-radius:14px;padding:0;overflow:hidden;background:#0b0b15;";
                 document.body.appendChild(dlg);
               } else {
                 overlay = document.createElement("div");
                 overlay.id = "map-overlay";
-                overlay.style.cssText =
-                  "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;";
+                overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;";
                 document.body.appendChild(overlay);
 
                 dlg = document.createElement("div");
                 dlg.id = "map-dialog";
-                dlg.style.cssText =
-                  "width:min(960px,96vw);height:min(80vh,720px);border:none;border-radius:14px;overflow:hidden;background:#0b0b15;box-shadow:0 10px 40px rgba(0,0,0,.35);";
+                dlg.style.cssText = "width:min(960px,96vw);height:min(80vh,720px);border:none;border-radius:14px;overflow:hidden;background:#0b0b15;box-shadow:0 10px 40px rgba(0,0,0,.35);";
                 overlay.appendChild(dlg);
 
                 overlay.addEventListener("click", (e) => {
@@ -121,8 +72,7 @@
               }
 
               const header = document.createElement("div");
-              header.style.cssText =
-                "display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#141428;color:#fff;font-family:Poppins,system-ui,sans-serif";
+              header.style.cssText = "display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#141428;color:#fff;font-family:Poppins,system-ui,sans-serif";
               header.innerHTML = `
                 <div style="font-weight:700;font-size:14px">${title}</div>
                 <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -151,19 +101,13 @@
               $open.rel = "noopener noreferrer";
             }
 
-            dlg.querySelector("#map-iframe").src = buildEmbedMap({
-              lat,
-              lng,
-              zoom,
-              basemap,
-            });
+            dlg.querySelector("#map-iframe").src = buildEmbedMap({ lat, lng, zoom, basemap });
 
             const a = dlg.querySelector("#btn-map-open");
             a.href = buildExternalMap({ lat, lng, zoom, basemap });
 
             if (typeof dlg.showModal === "function" && !dlg.open) dlg.showModal();
-            else if (document.getElementById("map-overlay"))
-              document.getElementById("map-overlay").style.display = "flex";
+            else if (document.getElementById("map-overlay")) document.getElementById("map-overlay").style.display = "flex";
 
             return { ok: true };
           }
@@ -171,14 +115,8 @@
           /* ========================
            *  IMAGEN EMBEBIDA (modal)
            * ======================== */
-          function openImageDialog({
-            url,
-            title = "Vista desde el balcón",
-            caption = "",
-            alt = "Imagen",
-          } = {}) {
-            if (!url || typeof url !== "string")
-              return { ok: false, error: "Missing image URL" };
+          function openImageDialog({ url, title = "Vista", caption = "", alt = "Imagen" } = {}) {
+            if (!url || typeof url !== "string") return { ok: false, error: "Missing image URL" };
 
             const supportsDialog = typeof HTMLDialogElement !== "undefined";
             let dlg = document.getElementById("img-dialog");
@@ -188,20 +126,17 @@
               if (supportsDialog) {
                 dlg = document.createElement("dialog");
                 dlg.id = "img-dialog";
-                dlg.style.cssText =
-                  "width:min(960px,96vw);height:min(80vh,720px);border:none;border-radius:14px;padding:0;overflow:hidden;background:#0b0b15;";
+                dlg.style.cssText = "width:min(960px,96vw);height:min(80vh,720px);border:none;border-radius:14px;padding:0;overflow:hidden;background:#0b0b15;";
                 document.body.appendChild(dlg);
               } else {
                 overlay = document.createElement("div");
                 overlay.id = "img-overlay";
-                overlay.style.cssText =
-                  "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;";
+                overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;";
                 document.body.appendChild(overlay);
 
                 dlg = document.createElement("div");
                 dlg.id = "img-dialog";
-                dlg.style.cssText =
-                  "width:min(960px,96vw);height:min(80vh,720px);border:none;border-radius:14px;overflow:hidden;background:#0b0b15;box-shadow:0 10px 40px rgba(0,0,0,.35);";
+                dlg.style.cssText = "width:min(960px,96vw);height:min(80vh,720px);border:none;border-radius:14px;overflow:hidden;background:#0b0b15;box-shadow:0 10px 40px rgba(0,0,0,.35);";
                 overlay.appendChild(dlg);
 
                 overlay.addEventListener("click", (e) => {
@@ -210,8 +145,7 @@
               }
 
               const header = document.createElement("div");
-              header.style.cssText =
-                "display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#141428;color:#fff;font-family:Poppins,system-ui,sans-serif";
+              header.style.cssText = "display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#141428;color:#fff;font-family:Poppins,system-ui,sans-serif";
               header.innerHTML = `
                 <div id="img-title" style="font-weight:700;font-size:14px">${title}</div>
                 <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -221,19 +155,16 @@
               `;
 
               const wrap = document.createElement("div");
-              wrap.style.cssText =
-                "display:flex;align-items:center;justify-content:center;width:100%;height:calc(100% - 76px);background:#0b0b15;";
+              wrap.style.cssText = "display:flex;align-items:center;justify-content:center;width:100%;height:calc(100% - 76px);background:#0b0b15;";
 
               const img = document.createElement("img");
               img.id = "img-view";
               img.alt = alt;
-              img.style.cssText =
-                "max-width:100%;max-height:100%;object-fit:contain;display:block;";
+              img.style.cssText = "max-width:100%;max-height:100%;object-fit:contain;display:block;";
 
               const cap = document.createElement("div");
               cap.id = "img-caption";
-              cap.style.cssText =
-                "padding:8px 12px;background:#0f0f1f;color:#cfd2ff;font-size:12px;font-family:Poppins,system-ui,sans-serif;";
+              cap.style.cssText = "padding:8px 12px;background:#0f0f1f;color:#cfd2ff;font-size:12px;font-family:Poppins,system-ui,sans-serif;";
 
               wrap.appendChild(img);
 
@@ -241,7 +172,6 @@
               dlg.appendChild(wrap);
               dlg.appendChild(cap);
 
-              // Eventos
               header.querySelector("#img-close").onclick = () => {
                 if (supportsDialog) dlg.close("user");
                 else document.getElementById("img-overlay")?.remove();
@@ -251,37 +181,271 @@
               a.rel = "noopener noreferrer";
             }
 
-            // Set content
             dlg.querySelector("#img-title").textContent = title;
             dlg.querySelector("#img-view").src = url;
             dlg.querySelector("#img-view").alt = alt || title;
             dlg.querySelector("#img-caption").textContent = caption || "";
             dlg.querySelector("#img-open-new").href = url;
 
-            // Mostrar
             if (typeof dlg.showModal === "function" && !dlg.open) dlg.showModal();
-            else if (document.getElementById("img-overlay"))
-              document.getElementById("img-overlay").style.display = "flex";
+            else if (document.getElementById("img-overlay")) document.getElementById("img-overlay").style.display = "flex";
 
             return { ok: true, url };
           }
 
           /* ========================
-           *  Registrar Client Tools
+           *  KARAOKE (modal + controles)
            * ======================== */
-          window.addEventListener("elevenlabs-convai:call", (e) => {
-            console.log("[convai:call] detail =", e.detail);
+          const audio = document.createElement("audio");
+          audio.id = "background-audio";
+          audio.src = "https://static.wixstatic.com/mp3/86b1c8_a1bd589ba7e547dc8a7a4cd761c40135.mp3";
+          audio.preload = "auto";
+          document.body.appendChild(audio);
+
+          const lyricsData = [
+            { stanza: 0, time: 0.16, text: "Desde el balcón de Vista Pelícano," },
+            { stanza: 0, time: 1.16, text: "mirando el mar azulito," },
+            { stanza: 0, time: 3.03, text: "llenando la neverita desde bien tempranito." },
+            { stanza: 0, time: 5.16, text: "Este vacilón tiene nombre y apellido." },
+            { stanza: 1, time: 9.03, text: "Yo soy Borí Cano. Aterrizo en la Marina" },
+            { stanza: 1, time: 11.22, text: "con el ferry cruzando, la brisa fresca no termina." },
+            { stanza: 1, time: 13.04, text: "El sol pega duro por alante y por atrás." },
+            { stanza: 2, time: 16.1, text: "Una medalla en la mano y el flow que no se va," },
+            { stanza: 2, time: 18.15, text: "desde Vista Pelícano yo arranco la misión," },
+            { stanza: 2, time: 21.02, text: "con la gente que me visite comienza el vacílón." },
+            { stanza: 3, time: 23.1, text: "La noche promete, se siente el calentón." },
+            { stanza: 3, time: 25.08, text: "Puerto Rico en mi sangre y en el pico un tostón." },
+            { stanza: 4, time: 27.2, text: "Aquí el Borí Cano con la medalla siempre en mano," },
+            { stanza: 4, time: 31.09, text: "en el ferry hacia Isleta llegando a Vista Pelicano." },
+            { stanza: 4, time: 33.16, text: "El sabor de la isla, la vibra que nunca engaña," },
+            { stanza: 4, time: 35.19, text: "¡Borí Cano con la Medalla, orgullo borincano y no es una campaña!" },
+            { stanza: 5, time: 48.02, text: "Llegamos a Fajardo, Harbor Café encendío'," },
+            { stanza: 5, time: 50.14, text: "mofongo en la mesa, el corillo prendío'." },
+            { stanza: 5, time: 53.05, text: "Risa tras risa, botella tras botella," },
+            { stanza: 5, time: 55.23, text: "La Medalla brilla más, que en el cielo una estrella." },
+            { stanza: 6, time: 62.18, text: "Aquí el Borí Cano con la medalla siempre en mano," },
+            { stanza: 6, time: 65.15, text: "hacia la playa de Icacos comienza el jangueo temprano." },
+            { stanza: 6, time: 69.23, text: "El sabor de la isla, la vibra que nunca engaña," },
+            { stanza: 6, time: 73.16, text: "¡Borí Cano con la Medalla, orgullo borincano y no es una campaña!" },
+            { stanza: 7, time: 79.06, text: "La música sube, la islita reventá'," },
+            { stanza: 7, time: 81.18, text: "dembow en las bocinas, la gente conectá'." },
+            { stanza: 7, time: 83.02, text: "Yo, un pelícano con flow, represento mi bandera," },
+            { stanza: 7, time: 85.23, text: "aquí no hay espacio para cervezas de tercera." },
+            { stanza: 8, time: 97.2, text: "Aquí el Borí Cano con la Medalla siempre en mano," },
+            { stanza: 8, time: 100.17, text: "desde Isleta Marina hasta el confín borincano." },
+            { stanza: 8, time: 103.22, text: "El sabor de la isla, la vibra que nunca engaña," },
+            { stanza: 8, time: 107.22, text: "¡Borí Cano con la Medalla, orgullo de Borinquen en las entrañas!" },
+            { stanza: 9, time: 112.0, text: "" }
+          ];
+
+          const PLAY_SVG  = '<svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>';
+          const PAUSE_SVG = '<svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+          const STOP_SVG  = '<svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M6 6h12v12H6z"/></svg>';
+
+          let kDlg, kOverlay, kLyrics, btnPlay, btnPause, btnStop, nudge;
+          let currentLyricIndex = -1;
+
+          function ensureKaraokeDialog() {
+            if (kDlg) return;
+            const supportsDialog = typeof HTMLDialogElement !== "undefined";
+
+            if (supportsDialog) {
+              kDlg = document.createElement("dialog");
+              kDlg.id = "karaoke-dialog";
+              kDlg.style.cssText = "width:min(900px,96vw);height:min(80vh,720px);border:none;border-radius:14px;padding:0;overflow:hidden;background:#0b0b15;";
+              document.body.appendChild(kDlg);
+            } else {
+              kOverlay = document.createElement("div");
+              kOverlay.id = "karaoke-overlay";
+              kOverlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;";
+              document.body.appendChild(kOverlay);
+
+              kDlg = document.createElement("div");
+              kDlg.id = "karaoke-dialog";
+              kDlg.style.cssText = "width:min(900px,96vw);height:min(80vh,720px);border:none;border-radius:14px;overflow:hidden;background:#0b0b15;box-shadow:0 10px 40px rgba(0,0,0,.35);";
+              kOverlay.appendChild(kDlg);
+
+              kOverlay.addEventListener("click", (e) => {
+                if (e.target === kOverlay) pauseKaraoke();
+              });
+            }
+
+            const header = document.createElement("div");
+            header.style.cssText = "display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#141428;color:#fff;font-family:Poppins,system-ui,sans-serif";
+            header.innerHTML = `
+              <div style="font-weight:700;font-size:14px">Karaoke – Borí Cano</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                <button id="k-play"  style="background:#36C; color:#fff; border:0; padding:8px 10px; border-radius:10px; cursor:pointer; font-size:12px; display:flex; gap:6px; align-items:center">${PLAY_SVG}<span>Play</span></button>
+                <button id="k-pause" style="background:#2a2a4a;color:#fff;border:0;padding:8px 10px;border-radius:10px;cursor:pointer;font-size:12px;display:flex;gap:6px;align-items:center">${PAUSE_SVG}<span>Pause</span></button>
+                <button id="k-stop"  style="background:#8a2be2;color:#fff;border:0;padding:8px 10px;border-radius:10px;cursor:pointer;font-size:12px;display:flex;gap:6px;align-items:center">${STOP_SVG}<span>Stop</span></button>
+              </div>
+            `;
+
+            const body = document.createElement("div");
+            body.style.cssText = "display:flex;align-items:flex-start;justify-content:center;width:100%;height:calc(100% - 56px);background:#0b0b15;padding:18px;";
+
+            kLyrics = document.createElement("div");
+            kLyrics.id = "k-lyrics";
+            kLyrics.style.cssText = "max-width:780px;width:100%;height:100%;color:#fff;font-family:Poppins,system-ui,sans-serif;line-height:1.55;overflow:auto;";
+            kLyrics.innerHTML = '<p style="opacity:.7">Cuando le de play, aquí se verán las líneas de la canción…</p>';
+
+            nudge = document.createElement("div");
+            nudge.id = "k-nudge";
+            nudge.style.cssText = "display:none;margin-top:12px;background:#141428;color:#fff;padding:10px 12px;border-radius:10px;font-size:13px";
+            nudge.innerHTML = `
+              Necesitamos un toque para habilitar el audio.
+              <button id="k-enable" style="margin-left:10px;background:#36C;color:#fff;border:0;padding:6px 10px;border-radius:8px;cursor:pointer">Habilitar audio</button>
+            `;
+
+            body.appendChild(kLyrics);
+            body.appendChild(nudge);
+
+            kDlg.appendChild(header);
+            kDlg.appendChild(body);
+
+            btnPlay  = header.querySelector("#k-play");
+            btnPause = header.querySelector("#k-pause");
+            btnStop  = header.querySelector("#k-stop");
+
+            btnPlay.onclick  = () => playKaraoke();
+            btnPause.onclick = () => pauseKaraoke();
+            btnStop.onclick  = () => stopKaraoke();
+
+            body.querySelector("#k-enable").onclick = async () => {
+              await primeAudioOnce();
+              await playKaraoke();
+            };
+          }
+
+          function openKaraokeDialog({ autoplay = false } = {}) {
+            ensureKaraokeDialog();
+            if (typeof kDlg.showModal === "function" && !kDlg.open) kDlg.showModal();
+            else if (kOverlay) kOverlay.style.display = "flex";
+
+            if (autoplay) playKaraoke();
+            return { ok: true };
+          }
+
+          // ---------- Desbloqueo de audio ----------
+          let primed = false;
+          async function primeAudioOnce() {
+            if (primed) return true;
+            try {
+              const wasMuted = audio.muted;
+              audio.muted = true;
+              await audio.play();
+              audio.pause();
+              audio.muted = wasMuted;
+              primed = true;
+              return true;
+            } catch {
+              primed = false;
+              return false;
+            }
+          }
+
+          // ---------- Letras ----------
+          function resetLyrics() {
+            currentLyricIndex = -1;
+            if (kLyrics) kLyrics.innerHTML = "";
+          }
+
+          function updateLyrics() {
+            if (!kLyrics) return;
+            const t = audio.currentTime;
+            let idx = -1;
+            for (let i = 0; i < lyricsData.length; i++) {
+              if (t >= lyricsData[i].time) idx = i; else break;
+            }
+            if (idx !== currentLyricIndex) {
+              currentLyricIndex = idx;
+              kLyrics.innerHTML = "";
+              if (idx < 0) return;
+              const make = (line, active) => {
+                const p = document.createElement("p");
+                p.textContent = line.text;
+                p.style.cssText = "margin:0 0 8px";
+                if (active) p.style.cssText += ";font-weight:700;color:#E4DEFF";
+                else p.style.cssText += ";opacity:.8";
+                return p;
+              };
+              const cur = lyricsData[idx];
+              if (cur && cur.text) {
+                kLyrics.appendChild(make(cur, true));
+                const next = lyricsData[idx + 1];
+                if (next && next.stanza === cur.stanza && next.text) kLyrics.appendChild(make(next, false));
+              }
+            }
+          }
+
+          audio.addEventListener("timeupdate", updateLyrics);
+          audio.addEventListener("ended", () => {
+            stopKaraoke();
           });
 
+          // ---------- Controles ----------
+          async function playKaraoke() {
+            ensureKaraokeDialog();
+            const okPrime = await primeAudioOnce();
+            if (!okPrime) {
+              nudge.style.display = "block";
+              return false;
+            }
+            nudge.style.display = "none";
+            try {
+              await audio.play();
+              btnPlay.disabled = true;
+              btnPause.disabled = false;
+              btnStop.disabled = false;
+              return true;
+            } catch {
+              nudge.style.display = "block";
+              return false;
+            }
+          }
+
+          function pauseKaraoke() {
+            audio.pause();
+            btnPlay && (btnPlay.disabled = false);
+            btnPause && (btnPause.disabled = true);
+            return true;
+          }
+
+          function stopKaraoke() {
+            audio.pause();
+            audio.currentTime = 0;
+            resetLyrics();
+            btnPlay && (btnPlay.disabled = false);
+            btnPause && (btnPause.disabled = true);
+            return true;
+          }
+
+          // Exponer para client tools
+          window.__boriKaraoke = { open: openKaraokeDialog, play: playKaraoke, pause: pauseKaraoke, stop: stopKaraoke };
+
+          /* ========================
+           *  Registrar Client Tools
+           * ======================== */
           window.addEventListener("elevenlabs-convai:call", (event) => {
             const cfg = event.detail?.config || {};
             cfg.clientTools = {
               ...(cfg.clientTools || {}),
-              // Mapa fijo
+
+              // Map
               openIsletaMapEmbed: () => openMapDialog({}),
-              // Imagen embebida
-              showImageModal: ({ url, title, caption }) =>
-                openImageDialog({ url, title, caption }),
+
+              // Image
+              showImageModal: ({ url, title, caption }) => openImageDialog({ url, title, caption }),
+
+              // Karaoke
+              openKaraoke: () => { openKaraokeDialog({ autoplay: false }); return { ok: true }; },
+              playKaraoke: async () => {
+                openKaraokeDialog({ autoplay: false });
+                const ok = await playKaraoke();
+                return { ok };
+              },
+              pauseKaraoke: async () => ({ ok: pauseKaraoke() }),
+              stopKaraoke:  async () => ({ ok: stopKaraoke() }),
             };
             event.detail.config = cfg;
           });
@@ -289,131 +453,6 @@
       </script>
     </main>
 
-    <!-- Audio de fondo -->
-    <audio
-      id="background-audio"
-      src="https://static.wixstatic.com/mp3/86b1c8_a1bd589ba7e547dc8a7a4cd761c40135.mp3"
-      preload="auto"
-    ></audio>
-
-    <!-- Karaoke + Play/Pause -->
-    <script>
-      (function () {
-        const playPauseButton = document.getElementById("play-pause-button");
-        const audio = document.getElementById("background-audio");
-        const logo = document.querySelector(".header-logo");
-        const lyricsContainer = document.getElementById("lyrics-container");
-
-        const lyricsData = [
-          { stanza: 0, time: 0.16, text: "Desde el balcón de Vista Pelícano," },
-          { stanza: 0, time: 1.16, text: "mirando el mar azulito," },
-          { stanza: 0, time: 3.03, text: "llenando la neverita desde bien tempranito." },
-          { stanza: 0, time: 5.16, text: "Este vacilón tiene nombre y apellido." },
-          { stanza: 1, time: 9.03, text: "Yo soy Borí Cano. Aterrizo en la Marina" },
-          { stanza: 1, time: 11.22, text: "con el ferry cruzando, la brisa fresca no termina." },
-          { stanza: 1, time: 13.04, text: "El sol pega duro por alante y por atrás." },
-          { stanza: 2, time: 16.1, text: "Una medalla en la mano y el flow que no se va," },
-          { stanza: 2, time: 18.15, text: "desde Vista Pelícano yo arranco la misión," },
-          { stanza: 2, time: 21.02, text: "con la gente que me visite comienza el vacílón." },
-          { stanza: 3, time: 23.1, text: "La noche promete, se siente el calentón." },
-          { stanza: 3, time: 25.08, text: "Puerto Rico en mi sangre y en el pico un tostón." },
-          { stanza: 4, time: 27.2, text: "Aquí el Borí Cano con la medalla siempre en mano," },
-          { stanza: 4, time: 31.09, text: "en el ferry hacia Isleta llegando a Vista Pelicano." },
-          { stanza: 4, time: 33.16, text: "El sabor de la isla, la vibra que nunca engaña," },
-          { stanza: 4, time: 35.19, text: "¡Borí Cano con la Medalla, orgullo borincano y no es una campaña!" },
-          { stanza: 5, time: 48.02, text: "Llegamos a Fajardo, Harbor Café encendío'," },
-          { stanza: 5, time: 50.14, text: "mofongo en la mesa, el corillo prendío'." },
-          { stanza: 5, time: 53.05, text: "Risa tras risa, botella tras botella," },
-          { stanza: 5, time: 55.23, text: "La Medalla brilla más, que en el cielo una estrella." },
-          { stanza: 6, time: 62.18, text: "Aquí el Borí Cano con la medalla siempre en mano," },
-          { stanza: 6, time: 65.15, text: "hacia la playa de Icacos comienza el jangueo temprano." },
-          { stanza: 6, time: 69.23, text: "El sabor de la isla, la vibra que nunca engaña," },
-          { stanza: 6, time: 73.16, text: "¡Borí Cano con la Medalla, orgullo borincano y no es una campaña!" },
-          { stanza: 7, time: 79.06, text: "La música sube, la islita reventá'," },
-          { stanza: 7, time: 81.18, text: "dembow en las bocinas, la gente conectá'." },
-          { stanza: 7, time: 83.02, text: "Yo, un pelícano con flow, represento mi bandera," },
-          { stanza: 7, time: 85.23, text: "aquí no hay espacio para cervezas de tercera." },
-          { stanza: 8, time: 97.2, text: "Aquí el Borí Cano con la Medalla siempre en mano," },
-          { stanza: 8, time: 100.17, text: "desde Isleta Marina hasta el confín borincano." },
-          { stanza: 8, time: 103.22, text: "El sabor de la isla, la vibra que nunca engaña," },
-          { stanza: 8, time: 107.22, text: "¡Borí Cano con la Medalla, orgullo de Borinquen en las entrañas!" },
-          { stanza: 9, time: 112.0, text: "" },
-        ];
-
-        let currentLyricIndex = -1;
-
-        function updateLyrics() {
-          const currentTime = audio.currentTime;
-          let newLyricIndex = -1;
-          for (let i = 0; i < lyricsData.length; i++) {
-            if (currentTime >= lyricsData[i].time) newLyricIndex = i;
-            else break;
-          }
-          if (newLyricIndex !== currentLyricIndex) {
-            currentLyricIndex = newLyricIndex;
-            lyricsContainer.innerHTML = "";
-            if (currentLyricIndex < 0) return;
-
-            const make = (line, active) => {
-              const p = document.createElement("p");
-              p.textContent = line.text;
-              p.className = "lyric-line" + (active ? " active" : "");
-              return p;
-            };
-            const cur = lyricsData[currentLyricIndex];
-            if (cur && cur.text) {
-              lyricsContainer.appendChild(make(cur, true));
-              const next = lyricsData[currentLyricIndex + 1];
-              if (next && next.stanza === cur.stanza && next.text)
-                lyricsContainer.appendChild(make(next, false));
-            }
-          }
-        }
-
-        if (playPauseButton && audio && logo && lyricsContainer) {
-          const playIcon =
-            '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
-          const pauseIcon =
-            '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
-
-          playPauseButton.innerHTML = playIcon;
-
-          const togglePlayPause = () => {
-            if (audio.paused) {
-              audio
-                .play()
-                .catch((err) => console.error("Audio error:", err));
-              playPauseButton.innerHTML = pauseIcon;
-              playPauseButton.classList.add("playing");
-              playPauseButton.setAttribute("aria-label", "Pausar música");
-              logo.classList.add("pulsing");
-              lyricsContainer.classList.add("visible");
-            } else {
-              audio.pause();
-              playPauseButton.innerHTML = playIcon;
-              playPauseButton.classList.remove("playing");
-              playPauseButton.setAttribute("aria-label", "Reproducir música");
-              logo.classList.remove("pulsing");
-              lyricsContainer.classList.remove("visible");
-            }
-          };
-
-          playPauseButton.addEventListener("click", togglePlayPause);
-          audio.addEventListener("timeupdate", updateLyrics);
-          audio.addEventListener("ended", () => {
-            playPauseButton.innerHTML = playIcon;
-            playPauseButton.classList.remove("playing");
-            playPauseButton.setAttribute("aria-label", "Reproducir música");
-            audio.currentTime = 0;
-            logo.classList.remove("pulsing");
-            lyricsContainer.classList.remove("visible");
-            lyricsContainer.innerHTML = "";
-            currentLyricIndex = -1;
-          });
-        }
-      })();
-    </script>
-
-    <div class="version-label">V3.1.0</div>
+    <div class="version-label">V3.3.1</div>
   </body>
 </html>
