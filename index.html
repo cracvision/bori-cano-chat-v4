@@ -9,8 +9,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet" />
+
     <style>
-      /* Mini toasts de debug (útiles en móvil) */
+      /* Toasts de debug visibles en móvil/PC */
       .toast {
         position: fixed; right: 12px; top: 12px; z-index: 2147483647;
         display: flex; flex-direction: column; gap: 8px; pointer-events: none;
@@ -28,7 +29,6 @@
   </head>
 
   <body>
-    <!-- Header (limpio; karaoke es sorpresa) -->
     <header class="app-header">
       <div class="title-container" style="margin-left:0">
         <h1>Borí Cano Chat</h1>
@@ -45,7 +45,7 @@
         (() => {
           const DEBUG_MODE = true;
 
-          /* ---------- Toasts visibles (sirven en móvil) ---------- */
+          /* ---------- Toasts visibles ---------- */
           const toastRoot = document.createElement('div');
           toastRoot.className = 'toast';
           document.addEventListener('DOMContentLoaded', () => document.body.appendChild(toastRoot));
@@ -368,8 +368,8 @@
               currentLyricIndex = idx; kLyrics.innerHTML = ""; if (idx < 0) return;
               const make = (line, active) => {
                 const p = document.createElement("p");
-                p.textContent = line.text; p.style.cssText = "margin:0 0 8px";
-                p.style.cssText += active ? ";font-weight:700;color:#E4DEFF" : ";opacity:.8"; return p;
+                p.textContent = line.text; p.style.cssText = "margin:0 0 8px"; p.style.cssText += active ? ";font-weight:700;color:#E4DEFF" : ";opacity:.8";
+                return p;
               };
               const cur = lyricsData[idx];
               if (cur && cur.text) {
@@ -386,7 +386,7 @@
           async function playKaraoke() {
             ensureKaraokeDialog();
             const okPrime = await primeAudioOnce();
-            if (!okPrime) { nudge.style.display = "block"; return false; }
+            if (!okPrime) { nudge.style.display = "block"; toast("audio needs user gesture","warn"); return false; }
             nudge.style.display = "none";
             try {
               await audio.play();
@@ -395,99 +395,100 @@
             } catch (e) {
               console.error("[karaoke play] error:", e);
               nudge.style.display = "block";
+              toast("play error: "+e, "err");
               return false;
             }
           }
           function pauseKaraoke() { audio.pause(); btnPlay && (btnPlay.disabled = false); btnPause && (btnPause.disabled = true); return true; }
           function stopKaraoke()  { audio.pause(); audio.currentTime = 0; resetLyrics(); btnPlay && (btnPlay.disabled = false); btnPause && (btnPause.disabled = true); return true; }
+          function closeKaraoke() { if (kDlg?.open) kDlg.close("user"); if (kOverlay) kOverlay.style.display = "none"; return true; }
 
-          // Exponer para client tools
-          window.__boriKaraoke = { open: openKaraokeDialog, play: playKaraoke, pause: pauseKaraoke, stop: stopKaraoke };
+          window.__boriKaraoke = { open: openKaraokeDialog, play: playKaraoke, pause: pauseKaraoke, stop: stopKaraoke, close: closeKaraoke };
 
           /* ==========================================================
-           *  REGISTRO TEMPRANO DE CLIENT TOOLS + FALLBACK EN :call
+           *  CLIENT TOOLS: registro robusto + aliases
            * ========================================================== */
-          function getWidgetNow() { return document.querySelector("elevenlabs-convai"); }
-          function onWidgetReady(cb) {
-            const w = getWidgetNow();
-            if (w) return cb(w);
-            const mo = new MutationObserver(() => {
-              const w2 = getWidgetNow();
-              if (w2) { mo.disconnect(); cb(w2); }
-            });
-            mo.observe(document.documentElement, { childList: true, subtree: true });
-          }
-
           function toolOpenMap() {
-            try { const r = openMapDialog({}); toast("tool openIsletaMapEmbed called","ok"); return { ok: !!r?.ok }; }
+            try { const r = openMapDialog({}); toast("tool openIsletaMap* called","ok"); return { ok: !!r?.ok }; }
             catch (e) { toast("map tool error: "+e,"err"); return { ok: false, error: String(e) }; }
           }
           function toolShowImageModal(args = {}) {
             try { const r = openImageDialog(args); toast("tool showImageModal called","ok"); return { ok: !!r?.ok, url: r?.url || args?.url }; }
             catch (e) { toast("image tool error: "+e,"err"); return { ok: false, error: String(e) }; }
           }
-          async function toolOpenKaraoke() {
-            try { const r = window.__boriKaraoke?.open({ autoplay:false }) || { ok:true }; toast("tool openKaraoke called","ok"); return { ok: !!r?.ok }; }
-            catch (e) { toast("openKaraoke error: "+e,"err"); return { ok:false, error:String(e) }; }
-          }
-          async function toolPlayKaraoke() {
-            try { window.__boriKaraoke?.open({ autoplay:false }); const ok = await window.__boriKaraoke?.play(); toast("tool playKaraoke -> "+ok,"ok"); return { ok: !!ok }; }
-            catch (e) { toast("playKaraoke error: "+e,"err"); return { ok:false, error:String(e) }; }
-          }
-          async function toolPauseKaraoke() {
-            try { const ok = !!window.__boriKaraoke?.pause(); toast("tool pauseKaraoke","ok"); return { ok }; }
-            catch (e) { toast("pauseKaraoke error: "+e,"err"); return { ok:false, error:String(e) }; }
-          }
-          async function toolStopKaraoke() {
-            try { const ok = !!window.__boriKaraoke?.stop(); toast("tool stopKaraoke","ok"); return { ok }; }
-            catch (e) { toast("stopKaraoke error: "+e,"err"); return { ok:false, error:String(e) }; }
-          }
+          async function toolOpenKaraoke()  { try { const r = window.__boriKaraoke?.open({ autoplay:false }) || { ok:true }; toast("tool openKaraoke","ok"); return { ok: !!r?.ok }; } catch (e) { toast("openKaraoke error: "+e,"err"); return { ok:false, error:String(e) }; } }
+          async function toolPlayKaraoke()  { try { window.__boriKaraoke?.open({ autoplay:false }); const ok = await window.__boriKaraoke?.play(); toast("tool playKaraoke -> "+ok,"ok"); return { ok: !!ok }; } catch (e) { toast("playKaraoke error: "+e,"err"); return { ok:false, error:String(e) }; } }
+          async function toolPauseKaraoke() { try { const ok = !!window.__boriKaraoke?.pause(); toast("tool pauseKaraoke","ok"); return { ok }; } catch (e) { toast("pauseKaraoke error: "+e,"err"); return { ok:false, error:String(e) }; } }
+          async function toolStopKaraoke()  { try { const ok = !!window.__boriKaraoke?.stop();  toast("tool stopKaraoke","ok");  return { ok }; } catch (e) { toast("stopKaraoke error: "+e,"err");  return { ok:false, error:String(e) }; } }
+          async function toolCloseKaraoke() { try { const ok = !!window.__boriKaraoke?.close(); toast("tool closeKaraoke","ok"); return { ok }; } catch (e) { toast("closeKaraoke error: "+e,"err"); return { ok:false, error:String(e) }; } }
 
+          // Paquete de tools con ALIASES
           const tools = {
-            // Map
+            // Map (todos los nombres posibles que pueda usar el LLM)
+            openIsletaMap: toolOpenMap,
+            open_isleta_map: toolOpenMap,
             openIsletaMapEmbed: toolOpenMap,
-            showMap: toolOpenMap, // alias
+            showMap: toolOpenMap,
 
             // Image
             showImageModal: toolShowImageModal,
 
-            // Karaoke
+            // Karaoke (nombres alternos)
             openKaraoke:  toolOpenKaraoke,
+            karaokeOpen:  toolOpenKaraoke,
+            startKaraoke: toolOpenKaraoke,
             playKaraoke:  toolPlayKaraoke,
             pauseKaraoke: toolPauseKaraoke,
             stopKaraoke:  toolStopKaraoke,
+            closeKaraoke: toolCloseKaraoke,
           };
 
-          // Registro temprano
-          onWidgetReady((widget) => {
-            // Inyección en cada call (por si el widget vuelve a crear config)
-            widget.addEventListener("elevenlabs-convai:call", (event) => {
-              const cfg = event?.detail?.config || {};
-              cfg.clientTools = { ...(cfg.clientTools || {}), ...tools };
-              event.detail.config = cfg;
-              toast("clientTools attached (event)","warn",2000);
-            });
+          // Funciones de registro
+          function getWidget() { return document.querySelector("elevenlabs-convai"); }
+          function registerClientTools(widget) {
+            if (!widget) return;
             try {
+              // 1) Método documentado
               if (typeof widget.setConfig === "function") {
-                widget.setConfig({ clientTools: tools });
+                widget.setConfig({ clientTools: { ...(widget.clientTools || {}), ...tools } });
                 toast("clientTools set via setConfig","warn",2000);
               }
             } catch {}
-            toast("[convai] ready","ok",1500);
-          });
+            try {
+              // 2) Propiedad directa (a veces el widget la lee)
+              widget.clientTools = { ...(widget.clientTools || {}), ...tools };
+              toast("clientTools set on element","warn",2000);
+            } catch {}
+          }
 
-          // Fallback: si llega un :call antes de onWidgetReady
+          // Registrar al estar listo
+          const mo = new MutationObserver(() => {
+            const w = getWidget();
+            if (w) { registerClientTools(w); }
+          });
+          mo.observe(document.documentElement, { childList: true, subtree: true });
+
+          // Refuerzo: reintentos por si el widget se reconfigura internamente
+          let retries = 0;
+          const iv = setInterval(() => {
+            const w = getWidget();
+            if (w) registerClientTools(w);
+            if (++retries >= 10) clearInterval(iv); // ~10s
+          }, 1000);
+
+          // Fallback: cada llamada nos da chance de inyectar antes de resolver el tool
           window.addEventListener("elevenlabs-convai:call", (event) => {
             const cfg = event?.detail?.config || {};
             cfg.clientTools = { ...(cfg.clientTools || {}), ...tools };
             event.detail.config = cfg;
-            toast("clientTools attached (window)","warn",2000);
+            toast("clientTools attached (window:event)","warn",1500);
           });
 
+          /* ===== Fin setup ===== */
         })();
       </script>
     </main>
 
-    <div class="version-label">V3.5.0</div>
+    <div class="version-label">V3.5.1</div>
   </body>
 </html>
