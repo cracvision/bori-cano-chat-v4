@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet" />
 
     <style>
-      /* Modal de imagen (mínimo) */
+      /* ===== Modal de imagen ===== */
       dialog.bori-modal{
         width:min(960px,96vw);height:min(80vh,720px);
         border:none;border-radius:14px;padding:0;overflow:hidden;
@@ -25,7 +25,42 @@
         background:#2a2a4a;color:#fff;border:0;padding:8px 10px;border-radius:10px;cursor:pointer;font-size:12px
       }
       .bori-modal__bar .btn.primary{background:#5F2EEA}
-      .bori-modal__body{height:calc(100% - 44px)}
+      .bori-modal__body{height:calc(100% - 44px);position:relative}
+
+      /* Lienzo */
+      .bori-modal__stage{
+        display:flex;align-items:center;justify-content:center;
+        height:100%;background:#0b0b15;position:relative
+      }
+      .bori-modal__img{
+        max-width:100%;max-height:100%;object-fit:contain;opacity:0;transition:opacity .32s ease
+      }
+      .bori-modal__img.is-ready{opacity:1}
+
+      /* Caption / Title */
+      .bori-modal__caption{
+        padding:8px 12px;background:#0f0f1f;color:#cfd2ff;font-size:12px;
+        font-family:Poppins,system-ui,sans-serif
+      }
+      .hidden{display:none !important}
+
+      /* Controles story */
+      .bori-nav{
+        position:absolute;inset:0;display:flex;justify-content:space-between;align-items:center;pointer-events:none
+      }
+      .bori-nav button{
+        pointer-events:auto;border:0;border-radius:12px;background:rgba(20,20,40,.6);
+        color:#fff;width:42px;height:42px;cursor:pointer;display:grid;place-items:center
+      }
+      .bori-nav .zone{
+        position:absolute;top:0;bottom:0;width:40%;cursor:pointer;pointer-events:auto;background:transparent
+      }
+      .bori-nav .zone.left{left:0}
+      .bori-nav .zone.right{right:0}
+      .bori-counter{
+        position:absolute;right:12px;bottom:10px;font-size:12px;color:#cfd2ff;background:rgba(20,20,40,.6);
+        padding:4px 8px;border-radius:8px
+      }
     </style>
   </head>
 
@@ -54,10 +89,24 @@
       <elevenlabs-convai agent-id="agent_0301k2g45tvaere8gnrgvbj9f89k"></elevenlabs-convai>
       <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
 
-      <!-- Client Tool: showImageModal -->
+      <!-- ===== Client Tools: showImageModal + showStory ===== -->
       <script>
         (function () {
-          /* ========== MODAL DE IMAGEN ========== */
+          /* ===== Estado global de story ===== */
+          const storyState = {
+            active: false,
+            frames: [],
+            index: 0,
+            autoplay: false,
+            interval: 4500,
+            timer: null
+          };
+
+          function clearAutoplay(){
+            if (storyState.timer){ clearInterval(storyState.timer); storyState.timer = null; }
+          }
+
+          /* ===== Modal ===== */
           function ensureImageModal () {
             let dlg = document.getElementById('img-dialog');
             if (dlg) return dlg;
@@ -65,12 +114,14 @@
             dlg = document.createElement('dialog');
             dlg.id = 'img-dialog';
             dlg.className = 'bori-modal';
+            dlg.setAttribute('aria-modal','true');
 
             const bar = document.createElement('div');
             bar.className = 'bori-modal__bar';
             bar.innerHTML = `
               <div id="img-title" style="font-weight:700;font-size:14px">Imagen</div>
-              <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                <span id="story-counter" class="bori-counter hidden"></span>
                 <a id="img-open" class="btn primary" target="_blank" rel="noopener noreferrer">Abrir</a>
                 <button id="img-close" class="btn">Cerrar</button>
               </div>
@@ -79,61 +130,228 @@
             const body = document.createElement('div');
             body.className = 'bori-modal__body';
             body.innerHTML = `
-              <div style="display:flex;align-items:center;justify-content:center;height:100%;background:#0b0b15">
-                <img id="img-view" style="max-width:100%;max-height:100%;object-fit:contain" alt="Imagen"/>
+              <div class="bori-modal__stage">
+                <img id="img-view" class="bori-modal__img" alt="" />
+                <div class="bori-nav hidden">
+                  <button id="btn-prev" title="Anterior" aria-label="Anterior">&#9664;</button>
+                  <button id="btn-next" title="Siguiente" aria-label="Siguiente">&#9654;</button>
+                  <div class="zone left" aria-hidden="true"></div>
+                  <div class="zone right" aria-hidden="true"></div>
+                </div>
               </div>
-              <div id="img-caption" style="padding:8px 12px;background:#0f0f1f;color:#cfd2ff;font-size:12px;font-family:Poppins,system-ui,sans-serif;"></div>
+              <div id="img-caption" class="bori-modal__caption hidden"></div>
             `;
 
             dlg.appendChild(bar);
             dlg.appendChild(body);
             document.body.appendChild(dlg);
 
-            dlg.querySelector('#img-close').addEventListener('click', () => dlg.close('user'));
+            // Cerrar
+            dlg.querySelector('#img-close').addEventListener('click', () => closeImageModal('user'));
+            dlg.addEventListener('cancel', (e)=>{ e.preventDefault(); closeImageModal('esc'); });
+
+            // Navegación de story
+            const prev = dlg.querySelector('#btn-prev');
+            const next = dlg.querySelector('#btn-next');
+            const zoneL = dlg.querySelector('.zone.left');
+            const zoneR = dlg.querySelector('.zone.right');
+            prev.addEventListener('click', prevFrame);
+            next.addEventListener('click', nextFrame);
+            zoneL.addEventListener('click', prevFrame);
+            zoneR.addEventListener('click', nextFrame);
+
+            // Teclado
+            dlg.addEventListener('keydown', (ev)=>{
+              if (!storyState.active) return;
+              if (ev.key === 'ArrowLeft') { ev.preventDefault(); prevFrame(); }
+              else if (ev.key === 'ArrowRight' || ev.key === ' ') { ev.preventDefault(); nextFrame(); }
+            });
+
             return dlg;
           }
 
-          function openImageModal ({ url, title='Imagen', caption='', alt='Imagen' } = {}) {
-            if (!url || typeof url !== 'string') return { ok:false, error:'missing url' };
-            const dlg = ensureImageModal();
-            dlg.querySelector('#img-title').textContent = title || 'Imagen';
-            dlg.querySelector('#img-view').src = url;
-            dlg.querySelector('#img-view').alt = alt || title || 'Imagen';
-            dlg.querySelector('#img-open').href = url;
-            dlg.querySelector('#img-caption').textContent = caption || '';
-            if (!dlg.open && typeof dlg.showModal === 'function') dlg.showModal();
-            return { ok:true, url };
+          function setTitleAndCaption(dlg, title='', caption=''){
+            const titleEl = dlg.querySelector('#img-title');
+            const capEl = dlg.querySelector('#img-caption');
+            titleEl.textContent = title || 'Imagen';
+            capEl.textContent = caption || '';
+            capEl.classList.toggle('hidden', !caption);
           }
 
-          /* ========== REGISTRO DEL CLIENT TOOL ========== */
-          const clientTools = {
-            showImageModal: ({ url, title, caption }) => openImageModal({ url, title, caption })
+          function setCounter(dlg, index, total){
+            const el = dlg.querySelector('#story-counter');
+            if (total > 1){
+              el.textContent = (index+1) + ' / ' + total;
+              el.classList.remove('hidden');
+            } else {
+              el.classList.add('hidden');
+            }
+          }
+
+          function setNavVisible(dlg, visible){
+            const nav = dlg.querySelector('.bori-nav');
+            nav.classList.toggle('hidden', !visible);
+          }
+
+          function loadImage(url){
+            return new Promise((resolve, reject)=>{
+              const im = new Image();
+              im.onload = ()=>resolve(url);
+              im.onerror = ()=>reject(new Error('image-load-failed'));
+              im.src = url;
+            });
+          }
+
+          function showUrlInModal(dlg, { url, title='', caption='', alt='', fit='contain' }){
+            // Pre-carga, luego cross-fade
+            const img = dlg.querySelector('#img-view');
+            img.classList.remove('is-ready');
+            img.style.objectFit = (fit === 'cover' ? 'cover' : 'contain');
+
+            return loadImage(url)
+              .then(()=>{
+                img.src = url;
+                img.alt = alt || title || '';
+                dlg.querySelector('#img-open').href = url;
+                setTitleAndCaption(dlg, title, caption);
+                requestAnimationFrame(()=>img.classList.add('is-ready'));
+                return { ok:true, url };
+              })
+              .catch(()=>{
+                // Fallback: logo Borí
+                const fallback = 'https://static.wixstatic.com/media/86b1c8_2d816491cf534b53b2b2bac9ac0a558f~mv2.png';
+                img.src = fallback;
+                img.alt = 'Imagen no disponible';
+                setTitleAndCaption(dlg, 'Imagen no disponible', 'No se pudo cargar la imagen solicitada.');
+                dlg.querySelector('#img-open').href = url;
+                requestAnimationFrame(()=>img.classList.add('is-ready'));
+                return { ok:false, error:'image-load-failed', url };
+              });
+          }
+
+          /* ===== API pública del modal ===== */
+          function openImageModal ({ url, title='', caption='', alt='', fit='contain' } = {}) {
+            const dlg = ensureImageModal();
+            storyState.active = false; // modo single
+            clearAutoplay();
+            setNavVisible(dlg, false);
+            setCounter(dlg, 0, 0);
+
+            if (!dlg.open && typeof dlg.showModal === 'function') dlg.showModal();
+            return showUrlInModal(dlg, { url, title, caption, alt, fit });
+          }
+
+          function startStory ({ frames, startIndex=0, autoplay=false, interval=4500 } = {}) {
+            const dlg = ensureImageModal();
+            if (!Array.isArray(frames) || frames.length === 0) return { ok:false, error:'missing frames' };
+
+            // Estado
+            storyState.active = true;
+            storyState.frames = frames;
+            storyState.index = Math.max(0, Math.min(startIndex, frames.length-1));
+            storyState.autoplay = !!autoplay;
+            storyState.interval = Math.max(1000, Number(interval)||4500);
+            clearAutoplay();
+
+            // Prefetch
+            frames.forEach(f => { if (f?.url) { const _ = new Image(); _.src = f.url; } });
+
+            // UI
+            if (!dlg.open && typeof dlg.showModal === 'function') dlg.showModal();
+            setNavVisible(dlg, true);
+            renderCurrentFrame();
+
+            if (storyState.autoplay){
+              storyState.timer = setInterval(()=> nextFrame(), storyState.interval);
+            }
+            return { ok:true, total: frames.length };
+          }
+
+          function renderCurrentFrame(){
+            const dlg = ensureImageModal();
+            const f = storyState.frames[storyState.index] || {};
+            setCounter(dlg, storyState.index, storyState.frames.length);
+            return showUrlInModal(dlg, {
+              url: f.url,
+              title: f.title || '',
+              caption: f.caption || '',
+              alt: f.alt || '',
+              fit: f.fit || 'contain'
+            });
+          }
+
+          function nextFrame(){
+            if (!storyState.active) return;
+            storyState.index = (storyState.index + 1);
+            if (storyState.index >= storyState.frames.length){
+              // Llega al final: detiene autoplay y se queda en el último frame
+              storyState.index = storyState.frames.length - 1;
+              clearAutoplay();
+              return;
+            }
+            renderCurrentFrame();
+          }
+
+          function prevFrame(){
+            if (!storyState.active) return;
+            storyState.index = Math.max(0, storyState.index - 1);
+            renderCurrentFrame();
+          }
+
+          function closeImageModal(reason='close'){
+            clearAutoplay();
+            const dlg = document.getElementById('img-dialog');
+            if (dlg?.open) dlg.close(reason);
+            storyState.active = false;
+            return { ok:true, reason };
+          }
+
+          /* ===== Registro de Client Tools ===== */
+          const safeTools = {
+            // Soporta ambos nombres por si el tool en ElevenLabs tiene case distinto
+            showImageModal: ({ url, title, caption, alt, fit }) => openImageModal({ url, title, caption, alt, fit }),
+            showimageModal: ({ url, title, caption, alt, fit }) => openImageModal({ url, title, caption, alt, fit }),
+            showStory: ({ frames, startIndex, autoplay, interval }) => startStory({ frames, startIndex, autoplay, interval }),
+            nextFrame: () => nextFrame(),
+            prevFrame: () => prevFrame(),
+            closeImage: () => closeImageModal('tool')
           };
+
+          function registerNow(widget){
+            try{
+              if (typeof widget.setConfig === 'function') {
+                widget.setConfig({ clientTools: { ...(widget.clientTools||{}), ...safeTools } });
+              } else {
+                widget.clientTools = { ...(widget.clientTools||{}), ...safeTools };
+              }
+            }catch(e){ /* noop */ }
+          }
 
           function tryRegisterClientTools(tries=0) {
             const widget = document.querySelector('elevenlabs-convai');
-            if (!widget) { if (tries<30) setTimeout(()=>tryRegisterClientTools(tries+1), 250); return; }
-            try {
-              if (typeof widget.setConfig === 'function') {
-                widget.setConfig({ clientTools: { ...(widget.clientTools||{}), ...clientTools } });
-              } else {
-                widget.clientTools = { ...(widget.clientTools||{}), ...clientTools };
-              }
-              // Fallback defensivo: asegurar en el primer call
-              window.addEventListener('elevenlabs-convai:call', (ev) => {
-                const cfg = ev?.detail?.config || {};
-                cfg.clientTools = { ...(cfg.clientTools||{}), ...clientTools };
-                ev.detail.config = cfg;
-              }, { once:true });
-            } catch (e) {
-              if (tries<30) setTimeout(()=>tryRegisterClientTools(tries+1), 250);
-            }
+            if (!widget) { if (tries<40) setTimeout(()=>tryRegisterClientTools(tries+1), 250); return; }
+            registerNow(widget);
+
+            // Asegurar en cada call (por si ElevenLabs reinstancia config)
+            window.addEventListener('elevenlabs-convai:call', (ev) => {
+              const cfg = ev?.detail?.config || {};
+              cfg.clientTools = { ...(cfg.clientTools||{}), ...safeTools };
+              ev.detail.config = cfg;
+            });
           }
+
           if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', tryRegisterClientTools);
           } else {
             tryRegisterClientTools();
           }
+
+          // Exponer para pruebas manuales en consola (opcional)
+          window.__boriShow = openImageModal;
+          window.__boriStory = startStory;
+          window.__boriNext = nextFrame;
+          window.__boriPrev = prevFrame;
+          window.__boriClose = closeImageModal;
         })();
       </script>
     </main>
@@ -255,6 +473,6 @@
       })();
     </script>
 
-    <div class="version-label">V3.5.0</div>
+    <div class="version-label">V3.6.0</div>
   </body>
 </html>
