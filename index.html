@@ -106,6 +106,36 @@
             if (storyState.timer){ clearInterval(storyState.timer); storyState.timer = null; }
           }
 
+          /* ===== Helpers de normalización ===== */
+          function normalizeFrames(input){
+            try{
+              // Si viene como string JSON
+              if (typeof input === 'string') input = JSON.parse(input.trim());
+
+              // Si viene anidado { frames: [...] }
+              if (input && !Array.isArray(input) && typeof input === 'object' && Array.isArray(input.frames)) {
+                input = input.frames;
+              }
+
+              // Si viene un solo objeto {url:...}
+              if (input && !Array.isArray(input) && typeof input === 'object' && input.url) {
+                input = [input];
+              }
+
+              // Si viene array de strings → array de objetos {url}
+              if (Array.isArray(input) && input.length && typeof input[0] === 'string') {
+                input = input.map(u => ({ url: u }));
+              }
+            } catch (e) { /* ignore parse errors */ }
+
+            // Validación final
+            if (!Array.isArray(input)) return null;
+            const out = input
+              .map(f => (typeof f === 'string' ? { url: f } : f))
+              .filter(f => f && typeof f.url === 'string' && /^https?:\/\//.test(f.url));
+            return out.length ? out : null;
+          }
+
           /* ===== Modal ===== */
           function ensureImageModal () {
             let dlg = document.getElementById('img-dialog');
@@ -202,7 +232,7 @@
             });
           }
 
-          function showUrlInModal(dlg, { url, title='', caption='', alt='', fit='contain' }){
+          function showUrlInModal(dlg, { url, title='', caption='', alt='', fit='contain' } = {}){
             // Pre-carga, luego cross-fade
             const img = dlg.querySelector('#img-view');
             img.classList.remove('is-ready');
@@ -241,22 +271,29 @@
             return showUrlInModal(dlg, { url, title, caption, alt, fit });
           }
 
+          /* ===== startStory robusto con normalización y coerción ===== */
           function startStory ({ frames, startIndex=0, autoplay=false, interval=4500 } = {}) {
-            const dlg = ensureImageModal();
-            if (!Array.isArray(frames) || frames.length === 0) return { ok:false, error:'missing frames' };
+            const parsedFrames = normalizeFrames(frames);
+            if (!parsedFrames) return { ok:false, error:'invalid_frames' };
+
+            // Coerción segura de tipos
+            const idx  = Math.max(0, Math.min(parseInt(startIndex,10) || 0, parsedFrames.length-1));
+            const auto = (autoplay === true || autoplay === 'true' || autoplay === 1 || autoplay === '1');
+            const ms   = Math.max(1000, parseInt(interval,10) || 4500);
 
             // Estado
-            storyState.active = true;
-            storyState.frames = frames;
-            storyState.index = Math.max(0, Math.min(startIndex, frames.length-1));
-            storyState.autoplay = !!autoplay;
-            storyState.interval = Math.max(1000, Number(interval)||4500);
+            storyState.active   = true;
+            storyState.frames   = parsedFrames;
+            storyState.index    = idx;
+            storyState.autoplay = auto;
+            storyState.interval = ms;
             clearAutoplay();
 
             // Prefetch
-            frames.forEach(f => { if (f?.url) { const _ = new Image(); _.src = f.url; } });
+            parsedFrames.forEach(f => { if (f?.url) { const _ = new Image(); _.src = f.url; } });
 
             // UI
+            const dlg = ensureImageModal();
             if (!dlg.open && typeof dlg.showModal === 'function') dlg.showModal();
             setNavVisible(dlg, true);
             renderCurrentFrame();
@@ -264,7 +301,7 @@
             if (storyState.autoplay){
               storyState.timer = setInterval(()=> nextFrame(), storyState.interval);
             }
-            return { ok:true, total: frames.length };
+            return { ok:true, total: parsedFrames.length };
           }
 
           function renderCurrentFrame(){
@@ -473,6 +510,6 @@
       })();
     </script>
 
-    <div class="version-label">V3.6.0</div>
+    <div class="version-label">V3.6.1</div>
   </body>
 </html>
