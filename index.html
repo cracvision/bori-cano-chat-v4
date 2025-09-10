@@ -89,7 +89,7 @@
       <elevenlabs-convai agent-id="agent_0301k2g45tvaere8gnrgvbj9f89k"></elevenlabs-convai>
       <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
 
-      <!-- ===== Client Tools: showImageModal + showStory ===== -->
+      <!-- ===== Client Tools: showImageModal + showStory (con pausa/reanudar/velocidad) ===== -->
       <script>
         (function () {
           /* ===== Estado global de story ===== */
@@ -109,26 +109,18 @@
           /* ===== Helpers de normalización ===== */
           function normalizeFrames(input){
             try{
-              // Si viene como string JSON
               if (typeof input === 'string') input = JSON.parse(input.trim());
-
-              // Si viene anidado { frames: [...] }
               if (input && !Array.isArray(input) && typeof input === 'object' && Array.isArray(input.frames)) {
                 input = input.frames;
               }
-
-              // Si viene un solo objeto {url:...}
               if (input && !Array.isArray(input) && typeof input === 'object' && input.url) {
                 input = [input];
               }
-
-              // Si viene array de strings → array de objetos {url}
               if (Array.isArray(input) && input.length && typeof input[0] === 'string') {
                 input = input.map(u => ({ url: u }));
               }
             } catch (e) { /* ignore parse errors */ }
 
-            // Validación final
             if (!Array.isArray(input)) return null;
             const out = input
               .map(f => (typeof f === 'string' ? { url: f } : f))
@@ -233,7 +225,6 @@
           }
 
           function showUrlInModal(dlg, { url, title='', caption='', alt='', fit='contain' } = {}){
-            // Pre-carga, luego cross-fade
             const img = dlg.querySelector('#img-view');
             img.classList.remove('is-ready');
             img.style.objectFit = (fit === 'cover' ? 'cover' : 'contain');
@@ -248,7 +239,6 @@
                 return { ok:true, url };
               })
               .catch(()=>{
-                // Fallback: logo Borí
                 const fallback = 'https://static.wixstatic.com/media/86b1c8_2d816491cf534b53b2b2bac9ac0a558f~mv2.png';
                 img.src = fallback;
                 img.alt = 'Imagen no disponible';
@@ -259,10 +249,10 @@
               });
           }
 
-          /* ===== API pública del modal ===== */
+          /* ===== API single ===== */
           function openImageModal ({ url, title='', caption='', alt='', fit='contain' } = {}) {
             const dlg = ensureImageModal();
-            storyState.active = false; // modo single
+            storyState.active = false;
             clearAutoplay();
             setNavVisible(dlg, false);
             setCounter(dlg, 0, 0);
@@ -271,17 +261,15 @@
             return showUrlInModal(dlg, { url, title, caption, alt, fit });
           }
 
-          /* ===== startStory robusto con normalización y coerción ===== */
+          /* ===== Story ===== */
           function startStory ({ frames, startIndex=0, autoplay=false, interval=4500 } = {}) {
             const parsedFrames = normalizeFrames(frames);
             if (!parsedFrames) return { ok:false, error:'invalid_frames' };
 
-            // Coerción segura de tipos
             const idx  = Math.max(0, Math.min(parseInt(startIndex,10) || 0, parsedFrames.length-1));
             const auto = (autoplay === true || autoplay === 'true' || autoplay === 1 || autoplay === '1');
             const ms   = Math.max(1000, parseInt(interval,10) || 4500);
 
-            // Estado
             storyState.active   = true;
             storyState.frames   = parsedFrames;
             storyState.index    = idx;
@@ -289,10 +277,8 @@
             storyState.interval = ms;
             clearAutoplay();
 
-            // Prefetch
             parsedFrames.forEach(f => { if (f?.url) { const _ = new Image(); _.src = f.url; } });
 
-            // UI
             const dlg = ensureImageModal();
             if (!dlg.open && typeof dlg.showModal === 'function') dlg.showModal();
             setNavVisible(dlg, true);
@@ -321,7 +307,6 @@
             if (!storyState.active) return;
             storyState.index = (storyState.index + 1);
             if (storyState.index >= storyState.frames.length){
-              // Llega al final: detiene autoplay y se queda en el último frame
               storyState.index = storyState.frames.length - 1;
               clearAutoplay();
               return;
@@ -343,15 +328,54 @@
             return { ok:true, reason };
           }
 
+          /* ===== NUEVOS CONTROLES: pausa / reanudar / velocidad / ir a frame ===== */
+          function pauseStory(){
+            if (!storyState.active) return { ok:false, error:'no_active_story' };
+            clearAutoplay();
+            storyState.autoplay = false;
+            return { ok:true, paused:true, index:storyState.index };
+          }
+
+          function resumeStory(){
+            if (!storyState.active) return { ok:false, error:'no_active_story' };
+            if (storyState.timer) clearAutoplay();
+            storyState.autoplay = true;
+            storyState.timer = setInterval(()=> nextFrame(), storyState.interval);
+            return { ok:true, playing:true, interval:storyState.interval };
+          }
+
+          function setStorySpeed({ interval } = {}){
+            const ms = Math.max(1000, parseInt(interval,10) || storyState.interval || 4500);
+            storyState.interval = ms;
+            if (storyState.autoplay){
+              clearAutoplay();
+              storyState.timer = setInterval(()=> nextFrame(), storyState.interval);
+            }
+            return { ok:true, interval: ms, autoplay: storyState.autoplay };
+          }
+
+          function goToFrame({ index } = {}){
+            if (!storyState.active) return { ok:false, error:'no_active_story' };
+            const i = Math.max(0, Math.min(parseInt(index,10)||0, storyState.frames.length-1));
+            storyState.index = i;
+            renderCurrentFrame();
+            return { ok:true, index: i };
+          }
+
           /* ===== Registro de Client Tools ===== */
           const safeTools = {
-            // Soporta ambos nombres por si el tool en ElevenLabs tiene case distinto
             showImageModal: ({ url, title, caption, alt, fit }) => openImageModal({ url, title, caption, alt, fit }),
             showimageModal: ({ url, title, caption, alt, fit }) => openImageModal({ url, title, caption, alt, fit }),
             showStory: ({ frames, startIndex, autoplay, interval }) => startStory({ frames, startIndex, autoplay, interval }),
+            // Navegación manual (si hiciera falta)
             nextFrame: () => nextFrame(),
             prevFrame: () => prevFrame(),
-            closeImage: () => closeImageModal('tool')
+            closeImage: () => closeImageModal('tool'),
+            // NUEVOS controles de reproducción
+            pauseStory: () => pauseStory(),
+            resumeStory: () => resumeStory(),
+            setStorySpeed: ({ interval }) => setStorySpeed({ interval }),
+            goToFrame: ({ index }) => goToFrame({ index })
           };
 
           function registerNow(widget){
@@ -383,11 +407,15 @@
             tryRegisterClientTools();
           }
 
-          // Exponer para pruebas manuales en consola (opcional)
+          // Helpers para pruebas manuales
           window.__boriShow = openImageModal;
           window.__boriStory = startStory;
           window.__boriNext = nextFrame;
           window.__boriPrev = prevFrame;
+          window.__boriPause = pauseStory;
+          window.__boriPlay = resumeStory;
+          window.__boriSpeed = (ms)=>setStorySpeed({interval:ms});
+          window.__boriGoto = (i)=>goToFrame({index:i});
           window.__boriClose = closeImageModal;
         })();
       </script>
@@ -510,6 +538,6 @@
       })();
     </script>
 
-    <div class="version-label">V3.6.1</div>
+    <div class="version-label">V3.7.0</div>
   </body>
 </html>
