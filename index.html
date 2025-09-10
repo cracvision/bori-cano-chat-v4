@@ -89,9 +89,13 @@
       <elevenlabs-convai agent-id="agent_0301k2g45tvaere8gnrgvbj9f89k"></elevenlabs-convai>
       <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
 
-      <!-- ===== Client Tools: showImageModal + showStory (con pausa/reanudar/velocidad) ===== -->
+      <!-- ===== Client Tools: showImageModal + showStory (con cola, normalización y autoplay robusto) ===== -->
       <script>
         (function () {
+          /* ===== Cola de operaciones para evitar carreras entre llamadas del LLM ===== */
+          let __op = Promise.resolve();
+          const enqueue = (fn) => (__op = __op.then(fn).catch((e)=>console.error('[story] op error:', e)));
+
           /* ===== Estado global de story ===== */
           const storyState = {
             active: false,
@@ -102,35 +106,33 @@
             timer: null
           };
 
-          function clearAutoplay(){
-            if (storyState.timer){ clearInterval(storyState.timer); storyState.timer = null; }
-          }
+          /* ===== Utils ===== */
+          const log = (...a)=>console.log('[story]', Date.now()%100000, ...a);
+          const clearAutoplay = ()=>{ if(storyState.timer){ clearTimeout(storyState.timer); storyState.timer = null; } };
 
-          /* ===== Helpers de normalización ===== */
           function normalizeFrames(input){
             try{
               if (typeof input === 'string') input = JSON.parse(input.trim());
-              if (input && !Array.isArray(input) && typeof input === 'object' && Array.isArray(input.frames)) {
-                input = input.frames;
-              }
-              if (input && !Array.isArray(input) && typeof input === 'object' && input.url) {
-                input = [input];
-              }
-              if (Array.isArray(input) && input.length && typeof input[0] === 'string') {
-                input = input.map(u => ({ url: u }));
-              }
-            } catch (e) { /* ignore parse errors */ }
-
+              if (input && !Array.isArray(input) && typeof input === 'object' && Array.isArray(input.frames)) input = input.frames;
+              if (input && !Array.isArray(input) && typeof input === 'object' && input.url) input = [input];
+              if (Array.isArray(input) && input.length && typeof input[0] === 'string') input = input.map(u => ({ url: u }));
+            } catch(e){ /* noop */ }
             if (!Array.isArray(input)) return null;
-            const out = input
-              .map(f => (typeof f === 'string' ? { url: f } : f))
-              .filter(f => f && typeof f.url === 'string' && /^https?:\/\//.test(f.url));
+            const out = input.map(f => (typeof f === 'string' ? { url: f } : f))
+                            .filter(f => f && typeof f.url === 'string' && /^https?:\/\//.test(f.url));
             return out.length ? out : null;
           }
+          const toBool = (v)=> (v===true || v==='true' || v===1 || v==='1');
+          const toInt  = (v, d)=> { const n = parseInt(v,10); return Number.isFinite(n) ? n : d; };
 
           /* ===== Modal ===== */
+          function ensureSingleDialog(){
+            const list = document.querySelectorAll('dialog#img-dialog');
+            list.forEach((d,i)=>{ if(i>0) d.remove(); });
+            return list[0] || null;
+          }
           function ensureImageModal () {
-            let dlg = document.getElementById('img-dialog');
+            let dlg = ensureSingleDialog() || document.getElementById('img-dialog');
             if (dlg) return dlg;
 
             dlg = document.createElement('dialog');
@@ -177,16 +179,16 @@
             const next = dlg.querySelector('#btn-next');
             const zoneL = dlg.querySelector('.zone.left');
             const zoneR = dlg.querySelector('.zone.right');
-            prev.addEventListener('click', prevFrame);
-            next.addEventListener('click', nextFrame);
-            zoneL.addEventListener('click', prevFrame);
-            zoneR.addEventListener('click', nextFrame);
+            prev.addEventListener('click', ()=>enqueue(prevFrame));
+            next.addEventListener('click', ()=>enqueue(nextFrame));
+            zoneL.addEventListener('click', ()=>enqueue(prevFrame));
+            zoneR.addEventListener('click', ()=>enqueue(nextFrame));
 
             // Teclado
             dlg.addEventListener('keydown', (ev)=>{
               if (!storyState.active) return;
-              if (ev.key === 'ArrowLeft') { ev.preventDefault(); prevFrame(); }
-              else if (ev.key === 'ArrowRight' || ev.key === ' ') { ev.preventDefault(); nextFrame(); }
+              if (ev.key === 'ArrowLeft') { ev.preventDefault(); enqueue(prevFrame); }
+              else if (ev.key === 'ArrowRight' || ev.key === ' ') { ev.preventDefault(); enqueue(nextFrame); }
             });
 
             return dlg;
@@ -194,7 +196,7 @@
 
           function setTitleAndCaption(dlg, title='', caption=''){
             const titleEl = dlg.querySelector('#img-title');
-            const capEl = dlg.querySelector('#img-caption');
+            const capEl   = dlg.querySelector('#img-caption');
             titleEl.textContent = title || 'Imagen';
             capEl.textContent = caption || '';
             capEl.classList.toggle('hidden', !caption);
@@ -211,8 +213,7 @@
           }
 
           function setNavVisible(dlg, visible){
-            const nav = dlg.querySelector('.bori-nav');
-            nav.classList.toggle('hidden', !visible);
+            dlg.querySelector('.bori-nav').classList.toggle('hidden', !visible);
           }
 
           function loadImage(url){
@@ -249,52 +250,34 @@
               });
           }
 
-          /* ===== API single ===== */
+          /* ===== API pública del modal (imagen suelta) ===== */
           function openImageModal ({ url, title='', caption='', alt='', fit='contain' } = {}) {
             const dlg = ensureImageModal();
-            storyState.active = false;
+            storyState.active = false; // modo single
             clearAutoplay();
             setNavVisible(dlg, false);
             setCounter(dlg, 0, 0);
-
             if (!dlg.open && typeof dlg.showModal === 'function') dlg.showModal();
             return showUrlInModal(dlg, { url, title, caption, alt, fit });
           }
 
-          /* ===== Story ===== */
-          function startStory ({ frames, startIndex=0, autoplay=false, interval=4500 } = {}) {
-            const parsedFrames = normalizeFrames(frames);
-            if (!parsedFrames) return { ok:false, error:'invalid_frames' };
-
-            const idx  = Math.max(0, Math.min(parseInt(startIndex,10) || 0, parsedFrames.length-1));
-            const auto = (autoplay === true || autoplay === 'true' || autoplay === 1 || autoplay === '1');
-            const ms   = Math.max(1000, parseInt(interval,10) || 4500);
-
-            storyState.active   = true;
-            storyState.frames   = parsedFrames;
-            storyState.index    = idx;
-            storyState.autoplay = auto;
-            storyState.interval = ms;
+          /* ===== Autoplay robusto: setTimeout recursivo (menos throttling) ===== */
+          function scheduleAutoplay(){
             clearAutoplay();
-
-            parsedFrames.forEach(f => { if (f?.url) { const _ = new Image(); _.src = f.url; } });
-
-            const dlg = ensureImageModal();
-            if (!dlg.open && typeof dlg.showModal === 'function') dlg.showModal();
-            setNavVisible(dlg, true);
-            renderCurrentFrame();
-
-            if (storyState.autoplay){
-              storyState.timer = setInterval(()=> nextFrame(), storyState.interval);
-            }
-            return { ok:true, total: parsedFrames.length };
+            if (!storyState.autoplay) return;
+            if (storyState.index >= storyState.frames.length - 1) return; // detener en última
+            storyState.timer = setTimeout(()=> {
+              enqueue(nextFrame);
+              scheduleAutoplay();
+            }, storyState.interval);
           }
 
-          function renderCurrentFrame(){
+          /* ===== Story ===== */
+          async function renderCurrentFrame(){
             const dlg = ensureImageModal();
             const f = storyState.frames[storyState.index] || {};
             setCounter(dlg, storyState.index, storyState.frames.length);
-            return showUrlInModal(dlg, {
+            await showUrlInModal(dlg, {
               url: f.url,
               title: f.title || '',
               caption: f.caption || '',
@@ -303,21 +286,68 @@
             });
           }
 
+          function startStoryImpl ({ frames, startIndex=0, autoplay=false, interval=4500 } = {}) {
+            log('startStory args:', {frames, startIndex, autoplay, interval});
+            const parsedFrames = normalizeFrames(frames);
+            if (!parsedFrames) return { ok:false, error:'invalid_frames' };
+
+            storyState.active   = true;
+            storyState.frames   = parsedFrames;
+            storyState.index    = Math.max(0, Math.min(toInt(startIndex,0), parsedFrames.length-1));
+            storyState.autoplay = toBool(autoplay);
+            storyState.interval = Math.max(1000, toInt(interval,4500));
+            clearAutoplay();
+
+            // Prefetch
+            parsedFrames.forEach(f => { if (f?.url) { const _ = new Image(); _.src = f.url; } });
+
+            // UI
+            const dlg = ensureImageModal();
+            if (!dlg.open && typeof dlg.showModal === 'function') dlg.showModal();
+            setNavVisible(dlg, true);
+
+            return renderCurrentFrame()
+              .then(()=> new Promise(r => requestAnimationFrame(()=> setTimeout(r,0)))) // micro-delay tras primer paint
+              .then(()=>{ if (storyState.autoplay) scheduleAutoplay(); return { ok:true, total: parsedFrames.length }; });
+          }
+
           function nextFrame(){
             if (!storyState.active) return;
-            storyState.index = (storyState.index + 1);
-            if (storyState.index >= storyState.frames.length){
-              storyState.index = storyState.frames.length - 1;
-              clearAutoplay();
-              return;
-            }
-            renderCurrentFrame();
+            if (storyState.index >= storyState.frames.length - 1) { clearAutoplay(); return; }
+            storyState.index += 1;
+            return renderCurrentFrame();
           }
 
           function prevFrame(){
             if (!storyState.active) return;
             storyState.index = Math.max(0, storyState.index - 1);
-            renderCurrentFrame();
+            return renderCurrentFrame();
+          }
+
+          function goToFrame({ index } = {}){
+            const n = toInt(index, 0);
+            if (!storyState.active) return;
+            if (n < 0 || n >= storyState.frames.length) return;
+            storyState.index = n;
+            return renderCurrentFrame();
+          }
+
+          function pauseStory(){
+            storyState.autoplay = false;
+            clearAutoplay();
+            return { ok:true };
+          }
+
+          function resumeStory(){
+            storyState.autoplay = true;
+            scheduleAutoplay();
+            return { ok:true };
+          }
+
+          function setStorySpeed({ interval } = {}){
+            storyState.interval = Math.max(1000, toInt(interval, storyState.interval));
+            if (storyState.autoplay) scheduleAutoplay();
+            return { ok:true, interval: storyState.interval };
           }
 
           function closeImageModal(reason='close'){
@@ -328,54 +358,18 @@
             return { ok:true, reason };
           }
 
-          /* ===== NUEVOS CONTROLES: pausa / reanudar / velocidad / ir a frame ===== */
-          function pauseStory(){
-            if (!storyState.active) return { ok:false, error:'no_active_story' };
-            clearAutoplay();
-            storyState.autoplay = false;
-            return { ok:true, paused:true, index:storyState.index };
-          }
-
-          function resumeStory(){
-            if (!storyState.active) return { ok:false, error:'no_active_story' };
-            if (storyState.timer) clearAutoplay();
-            storyState.autoplay = true;
-            storyState.timer = setInterval(()=> nextFrame(), storyState.interval);
-            return { ok:true, playing:true, interval:storyState.interval };
-          }
-
-          function setStorySpeed({ interval } = {}){
-            const ms = Math.max(1000, parseInt(interval,10) || storyState.interval || 4500);
-            storyState.interval = ms;
-            if (storyState.autoplay){
-              clearAutoplay();
-              storyState.timer = setInterval(()=> nextFrame(), storyState.interval);
-            }
-            return { ok:true, interval: ms, autoplay: storyState.autoplay };
-          }
-
-          function goToFrame({ index } = {}){
-            if (!storyState.active) return { ok:false, error:'no_active_story' };
-            const i = Math.max(0, Math.min(parseInt(index,10)||0, storyState.frames.length-1));
-            storyState.index = i;
-            renderCurrentFrame();
-            return { ok:true, index: i };
-          }
-
-          /* ===== Registro de Client Tools ===== */
+          /* ===== Registro de Client Tools (idempotente) ===== */
           const safeTools = {
-            showImageModal: ({ url, title, caption, alt, fit }) => openImageModal({ url, title, caption, alt, fit }),
-            showimageModal: ({ url, title, caption, alt, fit }) => openImageModal({ url, title, caption, alt, fit }),
-            showStory: ({ frames, startIndex, autoplay, interval }) => startStory({ frames, startIndex, autoplay, interval }),
-            // Navegación manual (si hiciera falta)
-            nextFrame: () => nextFrame(),
-            prevFrame: () => prevFrame(),
-            closeImage: () => closeImageModal('tool'),
-            // NUEVOS controles de reproducción
-            pauseStory: () => pauseStory(),
-            resumeStory: () => resumeStory(),
-            setStorySpeed: ({ interval }) => setStorySpeed({ interval }),
-            goToFrame: ({ index }) => goToFrame({ index })
+            showImageModal: (args) => enqueue(()=> openImageModal(args || {})),
+            showimageModal: (args) => enqueue(()=> openImageModal(args || {})), // alias defensivo
+            showStory:      (args) => enqueue(()=> startStoryImpl(args || {})),
+            nextFrame:      () => enqueue(nextFrame),
+            prevFrame:      () => enqueue(prevFrame),
+            pauseStory:     () => enqueue(pauseStory),
+            resumeStory:    () => enqueue(resumeStory),
+            setStorySpeed:  (args) => enqueue(()=> setStorySpeed(args || {})),
+            goToFrame:      (args) => enqueue(()=> goToFrame(args || {})),
+            closeImage:     () => enqueue(()=> closeImageModal('tool'))
           };
 
           function registerNow(widget){
@@ -385,7 +379,7 @@
               } else {
                 widget.clientTools = { ...(widget.clientTools||{}), ...safeTools };
               }
-            }catch(e){ /* noop */ }
+            }catch(e){ console.warn('register error', e); }
           }
 
           function tryRegisterClientTools(tries=0) {
@@ -393,7 +387,7 @@
             if (!widget) { if (tries<40) setTimeout(()=>tryRegisterClientTools(tries+1), 250); return; }
             registerNow(widget);
 
-            // Asegurar en cada call (por si ElevenLabs reinstancia config)
+            // Reinyectar en cada call (por si el widget reinstancia la config)
             window.addEventListener('elevenlabs-convai:call', (ev) => {
               const cfg = ev?.detail?.config || {};
               cfg.clientTools = { ...(cfg.clientTools||{}), ...safeTools };
@@ -407,16 +401,13 @@
             tryRegisterClientTools();
           }
 
-          // Helpers para pruebas manuales
-          window.__boriShow = openImageModal;
-          window.__boriStory = startStory;
-          window.__boriNext = nextFrame;
-          window.__boriPrev = prevFrame;
-          window.__boriPause = pauseStory;
-          window.__boriPlay = resumeStory;
-          window.__boriSpeed = (ms)=>setStorySpeed({interval:ms});
-          window.__boriGoto = (i)=>goToFrame({index:i});
-          window.__boriClose = closeImageModal;
+          // Exponer para pruebas manuales en consola (opcional)
+          window.__boriShow   = (u)=>enqueue(()=>openImageModal(u));
+          window.__boriStory  = (a)=>enqueue(()=>startStoryImpl(a));
+          window.__boriNext   = ()=>enqueue(nextFrame);
+          window.__boriPrev   = ()=>enqueue(prevFrame);
+          window.__boriPause  = ()=>enqueue(pauseStory);
+          window.__boriResume = ()=>enqueue(resumeStory);
         })();
       </script>
     </main>
