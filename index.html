@@ -3,38 +3,34 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Borí Cano Chat</title>
+    <title>Borí Cano Chat — Splash</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
 
-    <!-- Prefetch chat for snappy nav -->
+    <!-- Prefetch chat for faster redirect -->
     <link rel="prefetch" href="chat.html" />
 
-    <!-- Preload images & audio -->
+    <!-- Preload images -->
     <link rel="preload" as="image" href="https://static.wixstatic.com/media/86b1c8_c6f30851950541e1b6bd9eb200065198~mv2.png" />
     <link rel="preload" as="image" href="https://static.wixstatic.com/media/86b1c8_f3a9f2f8961748d8a79088aa8e70d4c8~mv2.png" />
-    <link rel="preload" as="audio" href="https://static.wixstatic.com/mp3/86b1c8_1c769b459be143c9b421a8e8e925af3e.mp3" />
 
-    <!-- NOTE: In repo, move CSS below into /index.css and link it. Kept inline for preview. -->
     <style>
-      /* ===== Landing styles (scoped to .landing) ===== */
+      /* ===== Splash styles ===== */
       html, body { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; }
-      body { font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif; }
+      body { font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif; background: #2a2a4e; }
 
-      /* Background container: image sits over a gradient so leftover area looks continuous */
+      /* Background container: poster over gradient so leftover area looks continuous */
       .bg { position: fixed; inset: 0; z-index: -2; overflow: hidden;
-            background: linear-gradient(deg, #433292 0%, #6a3fc5 55%, #5b32f1 100%); }
+            background: linear-gradient(180deg, #2b67b1 0%, #6a3fc5 55%, #f1c232 100%); }
       .bg picture, .bg img { width: 100%; height: 100%; display: block; }
       .bg img { object-fit: contain; object-position: center; }
       .bg::after { /* readability overlay (top vignette) */
         content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
         background: linear-gradient(180deg, rgba(3,7,18,.68) 0%, rgba(3,7,18,.38) 22%, rgba(3,7,18,.10) 48%, rgba(3,7,18,.22) 100%);
       }
-
-      body.landing { position: relative; background: #2a2a4e; }
 
       .main-title {
         position: absolute; left: 0; right: 0;
@@ -45,111 +41,54 @@
         background: linear-gradient(180deg, #a78bfa 0%, #7c3aed 45%, #60a5fa 100%);
         -webkit-background-clip: text; background-clip: text; color: transparent;
         -webkit-text-stroke: .6px rgba(0,0,0,.35);
-        text-shadow:
-          0 2px 0 rgba(0,0,0,.25),
-          0 8px 18px rgba(0,0,0,.35),
-          0 0 42px rgba(124,58,237,.35);
+        text-shadow: 0 2px 0 rgba(0,0,0,.25), 0 8px 18px rgba(0,0,0,.35), 0 0 42px rgba(124,58,237,.35);
         user-select: none;
       }
 
-      .button-container {
-        position: absolute; left: 0; right: 0;
-        top: clamp(7rem, 20vw, 12rem);
-        display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: clamp(.8rem, 3vw, 2rem);
-        padding: 0 1rem;
-      }
+      /* Optional minimal loading text (hidden for now) */
+      .loading { position: absolute; left: 0; right: 0; bottom: calc(1rem + env(safe-area-inset-bottom)); text-align: center;
+                 font-weight: 600; font-size: 0.95rem; color: rgba(255,255,255,.92); text-shadow: 0 2px 6px rgba(0,0,0,.45); opacity: 0; }
 
-      .action-button {
-        background: linear-gradient(-90deg, rgba(126,59,220,.82), rgba(30, 53, 180, 0.82));
-        border: clamp(1px, .5vw, 2px) solid #8a8585; color: #8a8585;
-        padding: clamp(.55rem, 1.8vw, .9rem) clamp(1.1rem, 3.5vw, 1.6rem);
-        border-radius: 999px;
-        font-size: clamp(1rem, 3.8vw, 1.2rem); font-weight: 700; cursor: pointer;
-        transition: transform .15s ease, box-shadow .25s ease;
-        text-shadow: 0 2px 4px rgba(0,0,0,.35);
-        box-shadow: 0 10px 24px rgba(2,6,23,.35);
-        backdrop-filter: blur(2px);
-        min-width: clamp(140px, 44vw, 240px);
-      }
-      .action-button:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(2,6,23,.45); }
-      .action-button:active { transform: translateY(0); }
-
-      /* Mobile (portrait) */
+      /* Mobile (portrait) tweaks */
       @media (max-width: 768px) {
         .main-title { font-size: clamp(1.9rem, 9.8vw, 3.4rem); top: calc(.7rem + env(safe-area-inset-top)); }
-        .button-container { top: clamp(6.2rem, 22vw, 9rem); }
       }
 
-      /* Short viewports (small phones / landscape heights) */
-      @media (max-height: 740px) {
-        .main-title { font-size: clamp(1.8rem, 8.8vw, 3.2rem); }
-        .button-container { top: clamp(5.6rem, 20vw, 8.2rem); }
-      }
-      @media (max-height: 650px) {
-        .main-title { font-size: clamp(1.6rem, 7.8vw, 2.8rem); }
-        .action-button { font-size: clamp(.95rem, 3.4vw, 1.05rem); }
-      }
-
-      /* Reduced motion */
-      @media (prefers-reduced-motion: reduce) {
-        .action-button { transition: none; }
-      }
+      /* Short viewports */
+      @media (max-height: 740px) { .main-title { font-size: clamp(1.8rem, 8.8vw, 3.2rem); } }
+      @media (max-height: 650px) { .main-title { font-size: clamp(1.6rem, 7.8vw, 2.8rem); } }
     </style>
   </head>
-  <body class="landing">
+  <body>
     <div class="bg" aria-hidden="true">
       <picture>
         <source media="(max-width: 768px)" srcset="https://static.wixstatic.com/media/86b1c8_f3a9f2f8961748d8a79088aa8e70d4c8~mv2.png" />
         <img src="https://static.wixstatic.com/media/86b1c8_c6f30851950541e1b6bd9eb200065198~mv2.png" alt="" />
       </picture>
     </div>
+
     <h1 class="main-title">Borí Cano Chat</h1>
+    <p class="loading" aria-live="polite">&nbsp;</p>
 
-    <div class="button-container" role="group" aria-label="Acciones del landing">
-      <button id="btnListen" class="action-button" aria-pressed="false" aria-label="Reproducir saludo">Escúchame</button>
-      <button id="btnChat" class="action-button" aria-label="Ir al chat">Hablemos en Vivo</button>
-    </div>
-
-    <!-- Audio greeting -->
-    <audio id="landingAudio" preload="auto" src="https://static.wixstatic.com/mp3/86b1c8_1c769b459be143c9b421a8e8e925af3e.mp3"></audio>
+    <noscript>
+      <div style="position:absolute;bottom:1rem;left:0;right:0;text-align:center;color:#fff;font-weight:600;text-shadow:0 2px 6px rgba(0,0,0,.45)">
+        Continúa a <a href="chat.html" style="color:#fff;">chat.html</a>
+      </div>
+    </noscript>
 
     <script>
-      (function(){
-        const audio = document.getElementById('landingAudio');
-        const listenBtn = document.getElementById('btnListen');
-        const chatBtn = document.getElementById('btnChat');
-        let playing = false;
+      // Prefetch + timed redirect (3s). Use replace() to avoid back-button loop.
+      window.addEventListener('load', () => {
+        try {
+          const l = document.createElement('link');
+          l.rel = 'prefetch'; l.href = 'chat.html';
+          document.head.appendChild(l);
+        } catch (e) { /* no-op */ }
 
-        function setListenUI(state){
-          playing = state;
-          listenBtn.setAttribute('aria-pressed', state ? 'true' : 'false');
-          listenBtn.textContent = state ? 'Pausar' : 'Escúchame';
-        }
-
-        listenBtn.addEventListener('click', async () => {
-          try {
-            if (!playing) { await audio.play(); setListenUI(true); }
-            else { audio.pause(); audio.currentTime = 0; setListenUI(false); }
-          } catch (err) {
-            console.warn('Audio play failed:', err);
-            alert('No se pudo reproducir el audio. Revisa permisos/volumen.');
-          }
-        });
-
-        audio.addEventListener('ended', () => setListenUI(false));
-        audio.addEventListener('pause', () => { if (!audio.ended) setListenUI(false); });
-
-        chatBtn.addEventListener('click', () => { window.location.href = 'chat.html'; });
-
-        // Gentle prefetch of chat after a short delay
-        window.addEventListener('load', () => {
-          setTimeout(() => {
-            const l = document.createElement('link');
-            l.rel = 'prefetch'; l.href = 'chat.html';
-            document.head.appendChild(l);
-          }, 1200);
-        });
-      })();
+        setTimeout(() => {
+          window.location.replace('chat.html');
+        }, 3000);
+      });
     </script>
   </body>
 </html>
