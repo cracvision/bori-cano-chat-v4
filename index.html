@@ -57,6 +57,43 @@
       /* Short viewports */
       @media (max-height: 740px) { .main-title { font-size: clamp(1.8rem, 8.8vw, 3.2rem); } }
       @media (max-height: 650px) { .main-title { font-size: clamp(1.6rem, 7.8vw, 2.8rem); } }
+          
+      /* === Title Shine (2) === */
+      .main-title { position: absolute; left: 0; right: 0; top: calc(1rem + env(safe-area-inset-top)); text-align: center; margin: 0 auto; padding: 0 .75rem; font-weight: 800; letter-spacing: .5px; font-size: clamp(2.2rem, 10.5vw, 5.2rem); background: linear-gradient(180deg, #a78bfa 0%, #7c3aed 45%, #60a5fa 100%); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-stroke: .6px rgba(0,0,0,.35); text-shadow: 0 2px 0 rgba(0,0,0,.25), 0 8px 18px rgba(0,0,0,.35), 0 0 42px rgba(124,58,237,.35); user-select: none; }
+      .main-title.shine::after{
+        content:""; position:absolute; inset:0; background: linear-gradient(75deg, transparent 0%, rgba(255,255,255,.0) 35%, rgba(255,255,255,.8) 50%, rgba(255,255,255,.0) 65%, transparent 100%);
+        mix-blend-mode: screen; filter: blur(1px); transform: translateX(-120%);
+        animation: titleShine 2.2s ease-out 0.4s forwards;
+        pointer-events:none;
+      }
+      @keyframes titleShine{ to{ transform: translateX(120%);} }
+
+      /* === Wave-fill Loading (1) === */
+      .loading { position: absolute; left: 0; right: 0; bottom: calc(1rem + env(safe-area-inset-bottom)); text-align: center; font-weight: 700; font-size: clamp(.95rem, 3.2vw, 1.05rem); color: rgba(255,255,255,.92); text-shadow: 0 2px 6px rgba(0,0,0,.45); }
+      .loading .wrap{ position:relative; display:inline-block; padding: 0 .15rem; }
+      .loading .base{ opacity:.25; }
+      .loading .fill{ position:absolute; inset:auto 0 0 0; height:0; overflow:hidden; animation: rise 2.6s ease-in forwards; }
+      .loading .fill .text{ background: linear-gradient(180deg, #a7f3d0 0%, #60a5fa 60%, #7c3aed 100%); -webkit-background-clip:text; background-clip:text; color: transparent; }
+      @keyframes rise{ 0%{height:0;} 100%{height:100%;} }
+      /* Moving wave cap */
+      .wave{ position:absolute; left:0; right:0; top:-10px; height:20px; overflow:visible; mix-blend-mode: screen; opacity:.9; }
+      .wave svg{ position:absolute; left:0; top:0; width:200%; height:100%; animation: waveMove 1.6s linear infinite; }
+      @keyframes waveMove{ from{ transform: translateX(0);} to{ transform: translateX(-50%);} }
+
+      /* === Golden Sparkles (5) === */
+      .sparks{ position: fixed; inset:auto 0 0 0; height: 24%; pointer-events:none; z-index:-1; }
+      .sparks i{ position:absolute; bottom:0; width:6px; height:6px; border-radius:50%; background: radial-gradient(circle, #fffbe6 10%, #fde68a 40%, #facc15 70%, rgba(250,204,21,.6) 100%); filter: drop-shadow(0 0 8px rgba(250,204,21,.8)); opacity:.0; transform: translateY(0) scale(.9);
+        animation: floatUp 2.8s linear infinite; animation-delay: var(--d, 0s); left: calc(var(--x, 50) * 1%);
+      }
+      @keyframes floatUp{ 0%{ opacity:0; transform: translateY(0) scale(.9);} 10%{opacity:.9;} 80%{opacity:.9;} 100%{ opacity:0; transform: translateY(-110%) scale(1);} }
+
+      /* Mobile tweaks */
+      @media (max-width: 768px) { .main-title { font-size: clamp(1.9rem, 9.8vw, 3.4rem); top: calc(.7rem + env(safe-area-inset-top)); } }
+      @media (max-height: 740px) { .main-title { font-size: clamp(1.8rem, 8.8vw, 3.2rem); } }
+      @media (max-height: 650px) { .main-title { font-size: clamp(1.6rem, 7.8vw, 2.8rem); } }
+
+      /* Reduced motion */
+      @media (prefers-reduced-motion: reduce){ .main-title.shine::after, .wave svg, .sparks i { animation: none !important; } }
     </style>
   </head>
   <body>
@@ -67,8 +104,33 @@
       </picture>
     </div>
 
-    <h1 class="main-title">Borí Cano Chat</h1>
-    <p class="loading" aria-live="polite">&nbsp;</p>
+    <h1 class="main-title shine">Borí Cano Chat</h1>
+    <p class="loading" aria-live="polite">
+      <span class="wrap">
+        <span class="text base">Entrando al chat…</span>
+        <span class="fill" aria-hidden="true">
+          <span class="text">Entrando al chat…</span>
+          <span class="wave">
+            <svg viewBox="0 0 120 20" preserveAspectRatio="none">
+              <path d="M0 10 Q 10 0 20 10 T 40 10 T 60 10 T 80 10 T 100 10 T 120 10 V20 H0 Z" fill="rgba(255,255,255,.65)"></path>
+            </svg>
+          </span>
+        </span>
+      </span>
+    </p>
+    <div class="sparks" aria-hidden="true">
+      <i style="--x:8; --d:.1s"></i>
+      <i style="--x:14; --d:.4s"></i>
+      <i style="--x:22; --d:.9s"></i>
+      <i style="--x:28; --d:.2s"></i>
+      <i style="--x:36; --d:1.1s"></i>
+      <i style="--x:44; --d:.5s"></i>
+      <i style="--x:52; --d:1.3s"></i>
+      <i style="--x:60; --d:.3s"></i>
+      <i style="--x:72; --d:1.0s"></i>
+      <i style="--x:84; --d:.7s"></i>
+      <i style="--x:90; --d:1.4s"></i>
+    </div>
 
     <noscript>
       <div style="position:absolute;bottom:1rem;left:0;right:0;text-align:center;color:#fff;font-weight:600;text-shadow:0 2px 6px rgba(0,0,0,.45)">
