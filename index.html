@@ -2,86 +2,75 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Borí Cano Chat — Splash</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <title>Borí Cano Chat — Start</title>
 
     <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Poppins:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Poppins:wght@400;700;900&display=swap"
+      rel="stylesheet"
+    />
 
-    <!-- Prefetch chat para transición más rápida -->
+    <!-- Prefetch chat para transición rápida -->
     <link rel="prefetch" href="chat.html" />
 
-    <!-- Preload imagen del splash -->
-    <link rel="preload" as="image" href="https://static.wixstatic.com/media/86b1c8_aa13c5837d9344b793e3ec2b6f6c8801~mv2.png" />
-
-    <!-- anime.js (CDN) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/2.0.2/anime.min.js" defer></script>
-
-    <!-- Estilos globales + splash (scoped) -->
+    <!-- CSS -->
     <link rel="stylesheet" href="index.css" />
   </head>
 
-  <!-- NOTA: clase 'splash' para aislar estilos -->
+  <!-- Importante: clase 'splash' para aislar estilos -->
   <body class="splash">
-    <div class="loading-container" id="splash-root" role="main" aria-label="Pantalla de carga">
-      <h2 class="app-title" aria-label="Borí Cano Chat">
-        <span class="word">Borí</span>
-        <span class="word">Cano</span>
-        <span class="word">Chat</span>
-      </h2>
+    <main class="splash-container" role="main" aria-label="Pantalla de inicio">
+      <h1 class="splash-title" aria-label="Borí Cano Chat">
+        <span>Borí</span> <span>Cano</span> <span>Chat</span>
+      </h1>
 
       <img
+        class="splash-image"
         src="https://static.wixstatic.com/media/86b1c8_aa13c5837d9344b793e3ec2b6f6c8801~mv2.png"
         alt="Borí Cano saludando"
-        class="center-image"
         width="768" height="768"
         decoding="async"
       />
 
-      <h1 class="ml2" aria-live="polite">Wepa Panita!</h1>
+      <p class="splash-tagline">¡Wepa panita! Ready pa’ entrar.</p>
 
-      <div class="spinner" aria-hidden="true">
-        <div class="bounce1"></div>
-        <div class="bounce2"></div>
-        <div class="bounce3"></div>
-      </div>
-    </div>
+      <button id="startBtn" class="btn-start" aria-label="Entrar al chat (Start)">
+        START
+      </button>
+    </main>
 
     <noscript>
       <div style="position:fixed;bottom:1rem;left:0;right:0;text-align:center;color:#fff;font-weight:600">
-        Continúa a <a href="chat.html" style="color:#fff;text-decoration:underline">chat.html</a>
+        JavaScript está desactivado. Continúa a <a href="chat.html" style="color:#fff;text-decoration:underline">chat.html</a>
       </div>
     </noscript>
 
-    <!-- Lógica del splash (JS plano) -->
-    <script src="index.js" defer></script>
-
-    <!-- Redirección suave al chat -->
     <script>
-      const url = new URL(location.href);
+      // Prefetch redundante por JS (fallback)
+      try {
+        const l = document.createElement('link');
+        l.rel = 'prefetch'; l.href = 'chat.html';
+        document.head.appendChild(l);
+      } catch (e) {}
 
-       // Overrides opcionales:
-       //  - ?splashDelay=5000  (ms)
-       //  - localStorage.splash_delay_ms = "5000"
-       //  - ?anim=1  (fuerza animaciones aunque el OS pida reduced motion)
-       //  - localStorage.splash_force_anim = "1"
-      const qsDelay   = parseInt(url.searchParams.get('splashDelay') || "", 10);
-      const saved     = parseInt(localStorage.getItem('splash_delay_ms') || "", 10);
-      const prefersRM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const forceAnim = url.searchParams.get('anim') === '1' || localStorage.getItem('splash_force_anim') === '1';
+      // Navegar con botón/teclado
+      const goChat = () => { window.location.href = 'chat.html'; };
+      document.getElementById('startBtn')?.addEventListener('click', goChat);
 
-      // 4.2s normal / 2.4s con reduced-motion (a menos que se fuerce anim)
-      const delay = Number.isFinite(qsDelay) ? qsDelay
-              : Number.isFinite(saved)  ? saved
-              : (prefersRM && !forceAnim ? 2400 : 4200);
-
-      window.addEventListener('load', () => {
-      try { const l=document.createElement('link'); l.rel='prefetch'; l.href='chat.html'; document.head.appendChild(l); } catch(e){}
-      setTimeout(() => { window.location.replace('chat.html'); }, delay);
-   });
+      // También Enter/Espacio para accesibilidad
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          const active = document.activeElement;
+          if (active && active.id === 'startBtn') {
+            e.preventDefault();
+            goChat();
+          }
+        }
+      });
     </script>
-
   </body>
 </html>
