@@ -1,6 +1,11 @@
 /* =========================================================
-   1) TUS ESTILOS EXISTENTES (no toqué nombres/valores)
+   INDEX.CSS — COMPLETO
+   Conserva estilos existentes y añade el landing del splash
+   con animaciones y botón START. Todo lo del splash está
+   bajo body.splash para no afectar chat.html.
    ========================================================= */
+
+/* ---------- BASE / EXISTENTE ---------- */
 @keyframes fadeInTransition {
   from { opacity: 0; transform: translateY(-20px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -11,14 +16,12 @@ html, body {
   height: 100%; width: 100%;
   font-family: 'Poppins', sans-serif;
   color: #ffffff;
-  /* OJO: dejamos tu overflow hidden como estaba en el live.
-     Si chat.html usara scroll, quítalo aquí y colócalo solo en .splash */
-  overflow: hidden;
+  /* No forzamos overflow global para no afectar chat.html */
 }
 
+/* Fondo “legacy” previo (lo mantengo por compatibilidad con tu app) */
 body {
   display: flex; flex-direction: column; align-items: center;
-  /* Fondo del landing anterior (lo conservamos por compatibilidad) */
   background-image:
     url('https://static.wixstatic.com/media/86b1c8_db2a61ccfc33487cadc257663f491523~mv2.png'),
     linear-gradient(to bottom, #5c3d99, #4c64ae);
@@ -28,7 +31,7 @@ body {
   background-color: #5c3d99;
 }
 
-/* Header / Karaoke (tus reglas existentes) */
+/* ---------- HEADER / KARAOKE (EXISTENTE) ---------- */
 .app-header {
   width: 100%;
   box-sizing: border-box;
@@ -39,8 +42,10 @@ body {
   z-index: 1;
   display: flex; align-items: center; justify-content: center;
 }
+
 .header-left { position: absolute; left: 2rem; display: flex; align-items: center; gap: 1rem; }
 .title-container { text-align: center; }
+
 .header-logo { width: 48px; height: 48px; object-fit: contain; flex-shrink: 0; }
 @keyframes pulse { 0% { transform: scale(1);} 50% { transform: scale(1.8);} 100% { transform: scale(1);} }
 .header-logo.pulsing { animation: pulse 1.2s infinite ease-in-out; }
@@ -107,23 +112,28 @@ p  { font-size: 1.25rem; margin: .5rem 0 0; font-weight: 400; opacity: 0; animat
   z-index: 1000;
 }
 
-/* ===== Splash Landing aislado ===== */
+/* =========================================================
+   SPLASH LANDING (AISLADO)
+   - Fondo negro, imagen flotando
+   - Botón START (gradiente violeta)
+   - Título con efecto (top) — .app-title .word
+   - "Wepa Panita!" animado — .ml2 (bottom)
+   ========================================================= */
+
 body.splash {
-  margin: 0;
-  color: #fff;
-  font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif;
-  background: #000;
-  /* 100dvh evita saltos del viewport móvil */
+  background: #000 !important;
+  background-image: none !important;
   min-height: 100dvh;
   display: grid;
   place-items: center;
   overflow: hidden;
+  font-family: 'Poppins', sans-serif;
 }
 
+/* Contenedor (compat: loading-container o splash-container) */
+.splash .loading-container,
 .splash .splash-container {
-  /* Safe areas en iOS */
-  padding: calc(16px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom));
-  text-align: center;
+  position: relative;
   display: grid;
   grid-template-rows: auto 1fr auto auto;
   gap: 16px;
@@ -131,23 +141,12 @@ body.splash {
   min-height: 100%;
   align-items: center;
   justify-items: center;
+  padding: calc(16px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom));
+  text-align: center;
 }
 
-.splash .splash-title {
-  margin: 0;
-  font-weight: 900;
-  letter-spacing: .08em;
-  font-size: clamp(28px, 6.2vw, 56px);
-  text-transform: uppercase;
-  line-height: 1.05;
-  background: linear-gradient(180deg, #a78bfa 0%, #7c3aed 45%, #60a5fa 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  text-shadow: 0 0 24px rgba(124,58,237,.25);
-  user-select: none;
-}
-
+/* IMAGEN (compat: center-image o splash-image) */
+.splash .center-image,
 .splash .splash-image {
   width: min(72dvw, 460px);
   height: auto;
@@ -163,6 +162,7 @@ body.splash {
   50%      { transform: translateY(-6px) rotate(-1deg); }
 }
 
+/* TAGLINE opcional */
 .splash .splash-tagline {
   margin: 4px 0 0;
   font-size: clamp(14px, 3.8vw, 18px);
@@ -170,7 +170,7 @@ body.splash {
   text-shadow: 0 2px 6px rgba(0,0,0,.45);
 }
 
-/* Botón START con gradiente violeta */
+/* ---------- BOTÓN START (gradiente violeta) ---------- */
 .splash .btn-start {
   appearance: none;
   border: 0;
@@ -191,7 +191,6 @@ body.splash {
   min-width: 220px;
   outline: none;
 }
-
 .splash .btn-start:hover {
   transform: translateY(-1px);
   box-shadow:
@@ -199,14 +198,12 @@ body.splash {
     inset 0 1px 0 rgba(255,255,255,.18);
   filter: saturate(1.05);
 }
-
 .splash .btn-start:active {
   transform: translateY(0);
   box-shadow:
     0 6px 16px rgba(124,58,237,.45),
     inset 0 1px 0 rgba(255,255,255,.12);
 }
-
 .splash .btn-start:focus-visible {
   box-shadow:
     0 0 0 3px rgba(255,255,255,.3),
@@ -214,12 +211,79 @@ body.splash {
     0 10px 24px rgba(124,58,237,.45);
 }
 
-/* Mobile tweaks */
-@media (max-width: 768px) {
-  .splash .splash-container { gap: 12px; }
+/* ---------- TÍTULO CON EFECTO (TOP CENTER) ---------- */
+/* Variante original (Google Ai Studio) — requerido por tu JS */
+.splash .app-title {
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-weight: 800;
+  font-size: 3.8em;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.5em;
+  margin: 0;
+  background: linear-gradient(45deg, #673cdf, #7c06eb);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 24px rgba(124,58,237,.25);
+  user-select: none;
+}
+.splash .app-title .word {
+  display: inline-block;
+  line-height: 1em;
 }
 
-/* Respeta reduced motion */
+/* Variante alternativa por si el HTML tiene splash-title (no animada por JS) */
+.splash .splash-title {
+  margin: 0;
+  font-weight: 900;
+  letter-spacing: .08em;
+  font-size: clamp(28px, 6.2vw, 56px);
+  text-transform: uppercase;
+  line-height: 1.05;
+  background: linear-gradient(180deg, #a78bfa 0%, #7c3aed 45%, #60a5fa 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 24px rgba(124,58,237,.25);
+  user-select: none;
+}
+
+/* ---------- “Wepa Panita!” (BOTTOM CENTER) ---------- */
+.splash .ml2 {
+  font-weight: 900;
+  font-size: 3.5em;
+  color: #ffffff;
+  position: absolute;
+  bottom: 12.5%;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  margin: 0;
+}
+.splash .ml2 .letter {
+  display: inline-block;
+  line-height: 1em;
+}
+
+/* ---------- RESPONSIVE / ACCESIBILIDAD ---------- */
+@media (max-width: 768px) {
+  .splash .loading-container,
+  .splash .splash-container { gap: 12px; }
+
+  .splash .center-image,
+  .splash .splash-image { width: min(80dvw, 520px); }
+
+  .splash .ml2 { font-size: 2em; bottom: 7.5%; }
+
+  .splash .app-title { font-size: 1.5em; top: 5%; letter-spacing: 0.25em; }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .splash .center-image,
   .splash .splash-image { animation: none !important; }
+  /* JS ya maneja animaciones “light”; el CSS no añade más */
 }
