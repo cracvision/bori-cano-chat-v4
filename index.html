@@ -3,154 +3,43 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Borí Cano Chat — Splash</title>
+    <title>BORI CANO CHAT</title>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="index.css" />
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Poppins:wght@400;700;900&display=swap" rel="stylesheet">
 
-    <!-- Prefetch chat for faster redirect -->
-    <link rel="prefetch" href="chat.html" />
-
-    <!-- Preload images -->
-    <link rel="preload" as="image" href="https://static.wixstatic.com/media/86b1c8_c6f30851950541e1b6bd9eb200065198~mv2.png" />
-    <link rel="preload" as="image" href="https://static.wixstatic.com/media/86b1c8_f3a9f2f8961748d8a79088aa8e70d4c8~mv2.png" />
-
-    <style>
-      /* ===== Splash styles ===== */
-      html, body { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; }
-      body { font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif; background: #2a2a4e; }
-
-      /* Background container: poster over gradient so leftover area looks continuous */
-      .bg { position: fixed; inset: 0; z-index: -2; overflow: hidden;
-            background: linear-gradient(180deg, #2b67b1 0%, #6a3fc5 55%, #f1c232 100%); }
-      .bg picture, .bg img { width: 100%; height: 100%; display: block; }
-      .bg img { object-fit: contain; object-position: center; }
-      .bg::after { /* readability overlay (top vignette) */
-        content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
-        background: linear-gradient(180deg, rgba(3,7,18,.68) 0%, rgba(3,7,18,.38) 22%, rgba(3,7,18,.10) 48%, rgba(3,7,18,.22) 100%);
-      }
-
-      .main-title {
-        position: absolute; left: 0; right: 0;
-        top: calc(1rem + env(safe-area-inset-top));
-        text-align: center; margin: 0 auto; padding: 0 .75rem;
-        font-weight: 800; letter-spacing: .5px;
-        font-size: clamp(2.2rem, 10.5vw, 5.2rem);
-        background: linear-gradient(180deg, #a78bfa 0%, #7c3aed 45%, #60a5fa 100%);
-        -webkit-background-clip: text; background-clip: text; color: transparent;
-        -webkit-text-stroke: .6px rgba(0,0,0,.35);
-        text-shadow: 0 2px 0 rgba(0,0,0,.25), 0 8px 18px rgba(0,0,0,.35), 0 0 42px rgba(124,58,237,.35);
-        user-select: none;
-      }
-
-      /* Optional minimal loading text (hidden for now) */
-      .loading { position: absolute; left: 0; right: 0; bottom: calc(1rem + env(safe-area-inset-bottom)); text-align: center;
-                 font-weight: 600; font-size: 0.95rem; color: rgba(255,255,255,.92); text-shadow: 0 2px 6px rgba(0,0,0,.45); opacity: 0; }
-
-      /* Mobile (portrait) tweaks */
-      @media (max-width: 768px) {
-        .main-title { font-size: clamp(1.9rem, 9.8vw, 3.4rem); top: calc(.7rem + env(safe-area-inset-top)); }
-      }
-
-      /* Short viewports */
-      @media (max-height: 740px) { .main-title { font-size: clamp(1.8rem, 8.8vw, 3.2rem); } }
-      @media (max-height: 650px) { .main-title { font-size: clamp(1.6rem, 7.8vw, 2.8rem); } }
-          
-      /* === Title Shine (2) === */
-      .main-title { position: absolute; left: 0; right: 0; top: calc(1rem + env(safe-area-inset-top)); text-align: center; margin: 0 auto; padding: 0 .75rem; font-weight: 800; letter-spacing: .5px; font-size: clamp(2.2rem, 10.5vw, 5.2rem); background: linear-gradient(180deg, #a78bfa 0%, #7c3aed 45%, #60a5fa 100%); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-stroke: .6px rgba(0,0,0,.35); text-shadow: 0 2px 0 rgba(0,0,0,.25), 0 8px 18px rgba(0,0,0,.35), 0 0 42px rgba(124,58,237,.35); user-select: none; }
-      .main-title.shine::after{
-        content:""; position:absolute; inset:0; background: linear-gradient(75deg, transparent 0%, rgba(255,255,255,.0) 35%, rgba(255,255,255,.8) 50%, rgba(255,255,255,.0) 65%, transparent 100%);
-        mix-blend-mode: screen; filter: blur(1px); transform: translateX(-120%);
-        animation: titleShine 2.2s ease-out 0.4s forwards;
-        pointer-events:none;
-      }
-      @keyframes titleShine{ to{ transform: translateX(120%);} }
-
-      /* === Wave-fill Loading (1) === */
-      .loading { position: absolute; left: 0; right: 0; bottom: calc(1rem + env(safe-area-inset-bottom)); text-align: center; font-weight: 700; font-size: clamp(.95rem, 3.2vw, 1.05rem); color: rgba(255,255,255,.92); text-shadow: 0 2px 6px rgba(0,0,0,.45); }
-      .loading .wrap{ position:relative; display:inline-block; padding: 0 .15rem; }
-      .loading .base{ opacity:.25; }
-      .loading .fill{ position:absolute; inset:auto 0 0 0; height:0; overflow:hidden; animation: rise 2.6s ease-in forwards; }
-      .loading .fill .text{ background: linear-gradient(180deg, #a7f3d0 0%, #60a5fa 60%, #7c3aed 100%); -webkit-background-clip:text; background-clip:text; color: transparent; }
-      @keyframes rise{ 0%{height:0;} 100%{height:100%;} }
-      /* Moving wave cap */
-      .wave{ position:absolute; left:0; right:0; top:-10px; height:20px; overflow:visible; mix-blend-mode: screen; opacity:.9; }
-      .wave svg{ position:absolute; left:0; top:0; width:200%; height:100%; animation: waveMove 1.6s linear infinite; }
-      @keyframes waveMove{ from{ transform: translateX(0);} to{ transform: translateX(-50%);} }
-
-      /* === Golden Sparkles (5) === */
-      .sparks{ position: fixed; inset:auto 0 0 0; height: 24%; pointer-events:none; z-index:-1; }
-      .sparks i{ position:absolute; bottom:0; width:6px; height:6px; border-radius:50%; background: radial-gradient(circle, #fffbe6 10%, #fde68a 40%, #facc15 70%, rgba(250,204,21,.6) 100%); filter: drop-shadow(0 0 8px rgba(250,204,21,.8)); opacity:.0; transform: translateY(0) scale(.9);
-        animation: floatUp 2.8s linear infinite; animation-delay: var(--d, 0s); left: calc(var(--x, 50) * 1%);
-      }
-      @keyframes floatUp{ 0%{ opacity:0; transform: translateY(0) scale(.9);} 10%{opacity:.9;} 80%{opacity:.9;} 100%{ opacity:0; transform: translateY(-110%) scale(1);} }
-
-      /* Mobile tweaks */
-      @media (max-width: 768px) { .main-title { font-size: clamp(1.9rem, 9.8vw, 3.4rem); top: calc(.7rem + env(safe-area-inset-top)); } }
-      @media (max-height: 740px) { .main-title { font-size: clamp(1.8rem, 8.8vw, 3.2rem); } }
-      @media (max-height: 650px) { .main-title { font-size: clamp(1.6rem, 7.8vw, 2.8rem); } }
-
-      /* Reduced motion */
-      @media (prefers-reduced-motion: reduce){ .main-title.shine::after, .wave svg, .sparks i { animation: none !important; } }
-    </style>
+    <!-- Anime.js (defer asegura orden con nuestro script debajo) -->
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/animejs/2.0.2/anime.min.js"></script>
   </head>
   <body>
-    <div class="bg" aria-hidden="true">
-      <picture>
-        <source media="(max-width: 768px)" srcset="https://static.wixstatic.com/media/86b1c8_f3a9f2f8961748d8a79088aa8e70d4c8~mv2.png" />
-        <img src="https://static.wixstatic.com/media/86b1c8_c6f30851950541e1b6bd9eb200065198~mv2.png" alt="" />
-      </picture>
-    </div>
+    <div class="loading-container">
+      <h1 class="ml2">Wepa Panita!</h1>
 
-    <h1 class="main-title shine">Borí Cano Chat</h1>
-    <p class="loading" aria-live="polite">
-      <span class="wrap">
-        <span class="text base">Entrando al chat…</span>
-        <span class="fill" aria-hidden="true">
-          <span class="text">Entrando al chat…</span>
-          <span class="wave">
-            <svg viewBox="0 0 120 20" preserveAspectRatio="none">
-              <path d="M0 10 Q 10 0 20 10 T 40 10 T 60 10 T 80 10 T 100 10 T 120 10 V20 H0 Z" fill="rgba(255,255,255,.65)"></path>
-            </svg>
-          </span>
-        </span>
-      </span>
-    </p>
-    <div class="sparks" aria-hidden="true">
-      <i style="--x:8; --d:.1s"></i>
-      <i style="--x:14; --d:.4s"></i>
-      <i style="--x:22; --d:.9s"></i>
-      <i style="--x:28; --d:.2s"></i>
-      <i style="--x:36; --d:1.1s"></i>
-      <i style="--x:44; --d:.5s"></i>
-      <i style="--x:52; --d:1.3s"></i>
-      <i style="--x:60; --d:.3s"></i>
-      <i style="--x:72; --d:1.0s"></i>
-      <i style="--x:84; --d:.7s"></i>
-      <i style="--x:90; --d:1.4s"></i>
-    </div>
+      <img
+        src="https://static.wixstatic.com/media/86b1c8_aa13c5837d9344b793e3ec2b6f6c8801~mv2.png"
+        alt="Bori Cano Loading"
+        class="center-image"
+      />
 
-    <noscript>
-      <div style="position:absolute;bottom:1rem;left:0;right:0;text-align:center;color:#fff;font-weight:600;text-shadow:0 2px 6px rgba(0,0,0,.45)">
-        Continúa a <a href="chat.html" style="color:#fff;">chat.html</a>
+      <h2 class="app-title">
+        <span class="word">Borí</span>
+        <span class="word">Cano</span>
+        <span class="word">Chat</span>
+      </h2>
+
+      <div class="spinner">
+        <div class="bounce1"></div>
+        <div class="bounce2"></div>
+        <div class="bounce3"></div>
       </div>
-    </noscript>
+    </div>
 
-    <script>
-      // Prefetch + timed redirect (3s). Use replace() to avoid back-button loop.
-      window.addEventListener('load', () => {
-        try {
-          const l = document.createElement('link');
-          l.rel = 'prefetch'; l.href = 'chat.html';
-          document.head.appendChild(l);
-        } catch (e) { /* no-op */ }
-
-        setTimeout(() => {
-          window.location.replace('chat.html');
-        }, 3000);
-      });
-    </script>
+    <!-- Nuestro JS (también defer) -->
+    <script defer src="index.js"></script>
   </body>
 </html>
