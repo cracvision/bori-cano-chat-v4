@@ -1,46 +1,81 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>BORI CANO CHAT</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Borí Cano Chat — Splash</title>
 
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Poppins:wght@400;700;900&display=swap" rel="stylesheet">
 
-<!-- Splash styles (negro + animaciones) -->
-<link rel="stylesheet" href="index.css" />
+    <!-- Prefetch chat para transición más rápida -->
+    <link rel="prefetch" href="chat.html" />
 
+    <!-- Preload imagen del splash -->
+    <link rel="preload" as="image" href="https://static.wixstatic.com/media/86b1c8_aa13c5837d9344b793e3ec2b6f6c8801~mv2.png" />
 
-<!-- Fonts -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Poppins:wght@400;700;900&display=swap" rel="stylesheet">
+    <!-- anime.js (CDN) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/2.0.2/anime.min.js" defer></script>
 
+    <!-- Estilos globales + splash (scoped) -->
+    <link rel="stylesheet" href="index.css" />
+  </head>
 
-<!-- Warm-up del chat mientras corre el splash -->
-<link rel="prefetch" href="chat.html" as="document" />
+  <!-- NOTA: clase 'splash' para aislar estilos -->
+  <body class="splash">
+    <div class="loading-container" id="splash-root" role="main" aria-label="Pantalla de carga">
+      <h2 class="app-title" aria-label="Borí Cano Chat">
+        <span class="word">Borí</span>
+        <span class="word">Cano</span>
+        <span class="word">Chat</span>
+      </h2>
 
+      <img
+        src="https://static.wixstatic.com/media/86b1c8_aa13c5837d9344b793e3ec2b6f6c8801~mv2.png"
+        alt="Borí Cano saludando"
+        class="center-image"
+        width="768" height="768"
+        decoding="async"
+      />
 
-<!-- Anime.js (defer) -->
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/animejs/2.0.2/anime.min.js"></script>
-</head>
-<body>
-<div class="loading-container">
-<h1 class="ml2">Wepa Panita!</h1>
-<img src="https://static.wixstatic.com/media/86b1c8_aa13c5837d9344b793e3ec2b6f6c8801~mv2.png" alt="Bori Cano Loading" class="center-image" />
-<h2 class="app-title">
-<span class="word">Borí</span>
-<span class="word">Cano</span>
-<span class="word">Chat</span>
-</h2>
-<div class="spinner">
-<div class="bounce1"></div>
-<div class="bounce2"></div>
-<div class="bounce3"></div>
-</div>
-</div>
+      <h1 class="ml2" aria-live="polite">Wepa Panita!</h1>
 
+      <div class="spinner" aria-hidden="true">
+        <div class="bounce1"></div>
+        <div class="bounce2"></div>
+        <div class="bounce3"></div>
+      </div>
+    </div>
 
-<!-- JS del splash (defer) -->
-<script defer src="index.js"></script>
-</body>
+    <noscript>
+      <div style="position:fixed;bottom:1rem;left:0;right:0;text-align:center;color:#fff;font-weight:600">
+        Continúa a <a href="chat.html" style="color:#fff;text-decoration:underline">chat.html</a>
+      </div>
+    </noscript>
+
+    <!-- Lógica del splash (JS plano) -->
+    <script src="index.js" defer></script>
+
+    <!-- Redirección suave al chat -->
+    <script>
+      // Respeta reduced-motion (reduce el tiempo)
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const delay = prefersReduced ? 1400 : 3000;
+
+      // Asegura prefetch también por JS (fallback)
+      window.addEventListener('load', () => {
+        try {
+          const l = document.createElement('link');
+          l.rel = 'prefetch'; l.href = 'chat.html';
+          document.head.appendChild(l);
+        } catch (e) {}
+
+        setTimeout(() => {
+          window.location.replace('chat.html');
+        }, delay);
+      });
+    </script>
+  </body>
 </html>
