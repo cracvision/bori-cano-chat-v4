@@ -60,22 +60,28 @@
 
     <!-- Redirección suave al chat -->
     <script>
-      // Respeta reduced-motion (reduce el tiempo)
-      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const delay = prefersReduced ? 1400 : 3000;
+      const url = new URL(location.href);
 
-      // Asegura prefetch también por JS (fallback)
+       // Overrides opcionales:
+       //  - ?splashDelay=5000  (ms)
+       //  - localStorage.splash_delay_ms = "5000"
+       //  - ?anim=1  (fuerza animaciones aunque el OS pida reduced motion)
+       //  - localStorage.splash_force_anim = "1"
+      const qsDelay   = parseInt(url.searchParams.get('splashDelay') || "", 10);
+      const saved     = parseInt(localStorage.getItem('splash_delay_ms') || "", 10);
+      const prefersRM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const forceAnim = url.searchParams.get('anim') === '1' || localStorage.getItem('splash_force_anim') === '1';
+
+      // 4.2s normal / 2.4s con reduced-motion (a menos que se fuerce anim)
+      const delay = Number.isFinite(qsDelay) ? qsDelay
+              : Number.isFinite(saved)  ? saved
+              : (prefersRM && !forceAnim ? 2400 : 4200);
+
       window.addEventListener('load', () => {
-        try {
-          const l = document.createElement('link');
-          l.rel = 'prefetch'; l.href = 'chat.html';
-          document.head.appendChild(l);
-        } catch (e) {}
-
-        setTimeout(() => {
-          window.location.replace('chat.html');
-        }, delay);
-      });
+      try { const l=document.createElement('link'); l.rel='prefetch'; l.href='chat.html'; document.head.appendChild(l); } catch(e){}
+      setTimeout(() => { window.location.replace('chat.html'); }, delay);
+   });
     </script>
+
   </body>
 </html>
