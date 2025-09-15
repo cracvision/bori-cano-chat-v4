@@ -19,7 +19,7 @@ html, body {
   /* No forzamos overflow global para no afectar chat.html */
 }
 
-/* Fondo “legacy” previo (lo mantengo por compatibilidad con tu app) */
+/* Fondo "legacy" previo (lo mantengo por compatibilidad con tu app) */
 body {
   display: flex; flex-direction: column; align-items: center;
   background-image:
@@ -252,7 +252,7 @@ body.splash {
   user-select: none;
 }
 
-/* ---------- “Wepa Panita!” (BOTTOM CENTER) ---------- */
+/* ---------- "Wepa Panita!" (BOTTOM CENTER) ---------- */
 .splash .ml2 {
   font-weight: 900;
   font-size: 3.5em;
@@ -285,5 +285,5 @@ body.splash {
 @media (prefers-reduced-motion: reduce) {
   .splash .center-image,
   .splash .splash-image { animation: none !important; }
-  /* JS ya maneja animaciones “light”; el CSS no añade más */
+  /* JS ya maneja animaciones "light"; el CSS no añade más */
 }

@@ -3,74 +3,457 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <title>Borí Cano Chat — Start</title>
+    <meta name="theme-color" content="#5c3d99" />
+    <title>Borí Cano - Tu Guía Pelícano en La Isla del Encanto</title>
+    <meta name="description" content="Chatea con Borí Cano, tu concierge virtual boricua. Descubre Vista Pelícano, Harbor Café y las mejores aventuras en Fajardo, Puerto Rico." />
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Poppins:wght@400;700;900&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
 
     <!-- Prefetch chat para transición rápida -->
     <link rel="prefetch" href="chat.html" />
 
     <!-- CSS -->
     <link rel="stylesheet" href="index.css" />
+
+    <style>
+      /* Estilos específicos para el landing page */
+      .landing-page {
+        background: #000;
+        color: #fff;
+        font-family: 'Poppins', sans-serif;
+        line-height: 1.6;
+        overflow-x: hidden;
+      }
+
+      /* Hero Section */
+      .hero {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        background: linear-gradient(135deg, #5c3d99 0%, #4c64ae 50%, #2d4a7a 100%);
+        overflow: hidden;
+      }
+
+      .hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: url('https://static.wixstatic.com/media/86b1c8_db2a61ccfc33487cadc257663f491523~mv2.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        opacity: 0.3;
+        z-index: 1;
+      }
+
+      .hero-content {
+        text-align: center;
+        z-index: 2;
+        position: relative;
+        max-width: 900px;
+        padding: 2rem;
+      }
+
+      .hero h1 {
+        font-family: 'Fredoka One', cursive;
+        font-size: clamp(2.5rem, 6vw, 4.5rem);
+        margin-bottom: 1rem;
+        background: linear-gradient(45deg, #7c3aed, #5e32c5, hsl(244, 62%, 32%));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        text-shadow: 0 0 30px rgba(168, 85, 247, 0.3);
+        animation: glow 2s ease-in-out infinite alternate;
+      }
+
+      @keyframes glow {
+        from { filter: brightness(1); }
+        to { filter: brightness(1.2); }
+      }
+
+      .hero p {
+        font-size: clamp(1.1rem, 3vw, 1.4rem);
+        margin-bottom: 2rem;
+        opacity: 0.9;
+      }
+
+      .cta-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .btn-primary, .btn-secondary {
+        padding: 1rem 2rem;
+        border: none;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #3125d3, #5725b4);
+        color: white;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 35px rgba(92, 94, 93, 0.4);
+      }
+
+      .btn-secondary {
+        background: linear-gradient(135deg, #5725b4, #3125d3);
+        color: white;
+        box-shadow: 0 8px 25px rgba(124, 58, 237, 0.3);
+      }
+
+      .btn-secondary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 35px rgba(124, 58, 237, 0.4);
+      }
+
+      /* Sections */
+      .section {
+        padding: 4rem 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .section h2 {
+        font-family: 'Fredoka One', cursive;
+        font-size: clamp(2rem, 5vw, 3rem);
+        text-align: center;
+        margin-bottom: 3rem;
+        background: linear-gradient(45deg, #a855f7, #8b5cf6);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+
+      /* Borí Section */
+      .bori-section {
+        background: linear-gradient(135deg, #1a1a2e, #2d2d5f);
+        border-radius: 20px;
+        padding: 3rem;
+        text-align: center;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      }
+
+      .bori-avatar {
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        margin: 0 auto 2rem;
+        border: 5px solid #a855f7;
+        box-shadow: 0 10px 30px rgb(228, 85, 247);
+        animation: float 3s ease-in-out infinite;
+      }
+
+      @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+      }
+
+      /* Two Column Layout */
+      .two-columns {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 3rem;
+        align-items: center;
+        margin: 3rem 0;
+      }
+
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin: 3rem 0;
+      }
+
+      .feature-card {
+        background: linear-gradient(135deg, #2d2d5f, #1a1a2e);
+        padding: 2rem;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s ease;
+      }
+
+      .feature-card:hover {
+        transform: translateY(-5px);
+      }
+
+      .feature-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+      }
+
+      /* Testimonials */
+      .testimonials {
+        background: linear-gradient(135deg, #1a1a2e, #2d2d5f);
+        padding: 4rem 2rem;
+        border-radius: 20px;
+        margin: 4rem 0;
+      }
+
+      .testimonial-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin: 3rem 0;
+      }
+
+      .testimonial {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 2rem;
+        border-radius: 15px;
+        backdrop-filter: blur(10px);
+      }
+
+      /* Footer */
+      .footer {
+        background: #0a0a0a;
+        padding: 3rem 2rem 2rem;
+        text-align: center;
+        border-top: 1px solid #333;
+      }
+
+      .footer-links {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        margin: 2rem 0;
+        flex-wrap: wrap;
+      }
+
+      .footer-links a {
+        color: #ccc;
+        text-decoration: none;
+        transition: color 0.3s ease;
+      }
+
+      .footer-links a:hover {
+        color: #a855f7;
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .two-columns {
+          grid-template-columns: 1fr;
+          gap: 2rem;
+        }
+
+        .cta-buttons {
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .btn-primary, .btn-secondary {
+          width: 100%;
+          max-width: 300px;
+          justify-content: center;
+        }
+
+        .section {
+          padding: 3rem 1rem;
+        }
+
+        .bori-section {
+          padding: 2rem;
+        }
+
+        .footer-links {
+          flex-direction: column;
+          gap: 1rem;
+        }
+      }
+    </style>
   </head>
 
-  <!-- Importante: clase 'splash' para aislar estilos -->
-  <body class="splash">
-    <main class="splash-container" role="main" aria-label="Pantalla de inicio">
-      <h1 class="splash-title" aria-label="Borí Cano Chat">
-        <span>Borí</span> <span>Cano</span> <span>Chat</span>
-      </h1>
-
-      <img
-        class="splash-image"
-        src="https://static.wixstatic.com/media/86b1c8_aa13c5837d9344b793e3ec2b6f6c8801~mv2.png"
-        alt="Borí Cano saludando"
-        width="768" height="768"
-        decoding="async"
-      />
-
-      <p class="splash-tagline">¡Wepa panita! Ready pa’ entrar.</p>
-
-      <button id="startBtn" class="btn-start" aria-label="Entrar al chat (Start)">
-        START
-      </button>
-    </main>
-
-    <noscript>
-      <div style="position:fixed;bottom:1rem;left:0;right:0;text-align:center;color:#fff;font-weight:600">
-        JavaScript está desactivado. Continúa a <a href="chat.html" style="color:#fff;text-decoration:underline">chat.html</a>
+  <body class="landing-page">
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="hero-content">
+        <h1>¡Chatea con Borí Cano ahora!</h1>
+        <p>Tu guía pelícano en La Isla del Encanto. Descubre Vista Pelícano, Harbor Café y las mejores aventuras en Fajardo, Puerto Rico.</p>
+        
+        <div class="cta-buttons">
+          <a href="https://wa.me/19393415337?text=Hola%20Bor%C3%AD%20Cano%2C%20quiero%20probar%20el%20concierge%20virtual%20%F0%9F%A6%A4" class="btn-primary" target="_blank">
+            <span>📱</span> WhatsApp
+          </a>
+          <a href="chat.html" class="btn-secondary">
+            <span>🎤</span> Chat Web
+          </a>
+        </div>
       </div>
-    </noscript>
+    </section>
 
-    <script>
-      // Prefetch redundante por JS (fallback)
-      try {
-        const l = document.createElement('link');
-        l.rel = 'prefetch'; l.href = 'chat.html';
-        document.head.appendChild(l);
-      } catch (e) {}
+    <!-- Conoce a Borí Cano -->
+    <section class="section">
+      <div class="bori-section">
+        <img src="https://static.wixstatic.com/media/86b1c8_aa13c5837d9344b793e3ec2b6f6c8801~mv2.png" alt="Borí Cano" class="bori-avatar" />
+        <h2>¡Wepa! Soy Borí Cano</h2>
+        <p style="font-size: 1.2rem;">Tu guía pelícano, carismático y alegre, la voz oficial de Vista Pelícano en Isleta Marina, Fajardo. ¡Mi misión es que tu estadía sea por la maceta y que no se te pierda ningún detalle de La Isla del Encanto!</p>
+      </div>
+    </section>
 
-      // Navegar con botón/teclado
-      const goChat = () => { window.location.href = 'chat.html'; };
-      document.getElementById('startBtn')?.addEventListener('click', goChat);
+    <!-- Vista Pelícano -->
+    <section class="section">
+      <h2>Tu Nido en el Paraíso: Vista Pelícano</h2>
+      <div class="two-columns">
+        <div>
+          <img src="https://static.wixstatic.com/media/86b1c8_db2a61ccfc33487cadc257663f491523~mv2.png" alt="Vista desde el balcón de Vista Pelícano" style="width: 100%; border-radius: 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.3);" />
+        </div>
+        <div>
+          <h3 style="color: #a855f7; margin-bottom: 1.5rem;">Vistas brutal y comodidad a fuego en tu apartamento vacacional</h3>
+          <ul style="list-style: none; padding: 0;">
+            <li style="margin: 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
+              <span>🌊</span> Balcón privado con panorámicas de las islas
+            </li>
+            <li style="margin: 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
+              <span>🏠</span> Apartamento moderno con Wi-Fi de alta velocidad
+            </li>
+            <li style="margin: 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
+              <span>🏊‍♀️</span> Acceso a piscinas y canchas en Isleta Marina
+            </li>
+            <li style="margin: 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
+              <span>🤿</span> ¡El mejor spot para hacer snorkeling!
+            </li>
+          </ul>
+          <a href="chat.html" class="btn-secondary" style="margin-top: 1rem;">Explora Vista Pelícano</a>
+        </div>
+      </div>
+    </section>
 
-      // También Enter/Espacio para accesibilidad
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          const active = document.activeElement;
-          if (active && active.id === 'startBtn') {
-            e.preventDefault();
-            goChat();
-          }
-        }
-      });
-    </script>
+    <!-- Harbor Café -->
+    <section class="section">
+      <div class="feature-card" style="max-width: 800px; margin: 0 auto;">
+        <h2>Harbor Café: ¡Un Jangueo Gastronómico en el Mar!</h2>
+        <div style="font-size: 4rem; margin: 1rem 0;">🍔⛴️</div>
+        <h3 style="color: #a855f7;">¡El único restaurante en Puerto Rico al que llegas en ferry gratis!</h3>
+        <p>Harbor Café te espera en Isleta Marina con una deliciosa fusión caribeña e internacional. ¡No te pierdas el famoso Boriburger, una explosión de sabor con maduros y queso mozzarella!</p>
+        <a href="chat.html" class="btn-primary" style="margin-top: 1rem;">Ver el menú completo</a>
+      </div>
+    </section>
+
+    <!-- Aventuras -->
+    <section class="section">
+      <h2>Aventuras en La Isla del Encanto</h2>
+      <p style="text-align: center; font-size: 1.2rem; margin-bottom: 3rem;">¡De la selva a la bahía y de vuelta al mar! Puerto Rico te espera con aventuras para tu corillo.</p>
+      
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🌿</div>
+          <h3>El Yunque</h3>
+          <p>Explora el único bosque tropical lluvioso de EE.UU.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">✨</div>
+          <h3>Bahías Bioluminiscentes</h3>
+          <p>Maravíllate con la magia de las aguas que brillan</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🏖️</div>
+          <h3>Playas de Ensueño</h3>
+          <p>Disfruta de Icacos y Palomino</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🏍️</div>
+          <h3>Aventuras Extremas</h3>
+          <p>Vive la adrenalina con ATV, Zipline y Snorkel</p>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 3rem;">
+        <a href="chat.html" class="btn-primary">¡Pregúntale a Borí por las mejores excursiones!</a>
+      </div>
+    </section>
+
+    <!-- Tu Experiencia -->
+    <section class="section">
+      <div class="two-columns">
+        <div>
+          <h2 style="text-align: left;">Tu concierge boricua, siempre a tu lado</h2>
+          <p>Chatea por WhatsApp, habla por voz o usa nuestra web. Borí Cano está listo para bregar con todas tus preguntas, ofrecerte recomendaciones y hasta enviar órdenes a la cocina de Harbor Café. ¡Todo un mamey!</p>
+          
+          <div style="display: flex; gap: 1rem; margin: 2rem 0; flex-wrap: wrap;">
+            <span style="background: #25D366; padding: 0.5rem 1rem; border-radius: 25px; display: flex; align-items: center; gap: 0.5rem;">
+              📱 WhatsApp
+            </span>
+            <span style="background: #7c3aed; padding: 0.5rem 1rem; border-radius: 25px; display: flex; align-items: center; gap: 0.5rem;">
+              🎤 Voz
+            </span>
+            <span style="background: #4c64ae; padding: 0.5rem 1rem; border-radius: 25px; display: flex; align-items: center; gap: 0.5rem;">
+              🌐 Web
+            </span>
+          </div>
+        </div>
+        <div style="text-align: center;">
+          <div style="font-size: 8rem; color: #a855f7;">📱</div>
+          <p style="opacity: 0.8;">Interfaz amigable en español</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="testimonials">
+      <h2 style="text-align: center;">Lo que dicen nuestros Panas</h2>
+      <p style="text-align: center; font-size: 1.2rem; opacity: 0.9;">Nuestros huéspedes lo confirman: ¡La experiencia con Borí Cano y Gabriela es por la maceta!</p>
+      
+      <div class="testimonial-grid">
+        <div class="testimonial">
+          <p>"¡Qué chévere la ayuda de Borí Cano para organizar nuestro día en Fajardo! Una maravilla."</p>
+          <div style="margin-top: 1rem; color: #a855f7;">⭐⭐⭐⭐⭐</div>
+        </div>
+        <div class="testimonial">
+          <p>"La atención de Gabriela, la Superhost, es brutal. ¡Nos sentimos como en casa!"</p>
+          <div style="margin-top: 1rem; color: #a855f7;">⭐⭐⭐⭐⭐</div>
+        </div>
+        <div class="testimonial">
+          <p>"Pedir la cena en Harbor Café fue un mamey gracias a Borí. ¡Recomendado 100%!"</p>
+          <div style="margin-top: 1rem; color: #a855f7;">⭐⭐⭐⭐⭐</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <h2>¡Empieza tu aventura inolvidable con Borí Cano en Puerto Rico!</h2>
+      
+      <div class="cta-buttons" style="margin: 2rem 0;">
+        <a href="https://wa.me/19393415337?text=Hola%20Bor%C3%AD%20Cano%2C%20quiero%20probar%20el%20concierge%20virtual%20%F0%9F%A6%A4" class="btn-primary" target="_blank">
+          <span>📱</span> WhatsApp: +1 (939) 341-5337
+        </a>
+        <a href="chat.html" class="btn-secondary">
+          <span>🎤</span> Chat Web
+        </a>
+      </div>
+
+      <div class="footer-links">
+        <a href="#">Política de Privacidad</a>
+        <a href="#">Términos de Servicio</a>
+        <a href="#">Instagram</a>
+        <a href="#">Facebook</a>
+        <a href="mailto:info@vistapalicano.com">Contacto</a>
+      </div>
+
+      <p style="margin-top: 2rem; opacity: 0.7;">© 2024 Borí Cano - Vista Pelícano. Todos los derechos reservados.</p>
+    </footer>
   </body>
 </html>
