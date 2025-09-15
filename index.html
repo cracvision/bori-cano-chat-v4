@@ -28,6 +28,36 @@
         overflow-x: hidden;
       }
 
+      /* Header */
+      .header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        background: rgba(10, 10, 10, 0.9);
+        backdrop-filter: blur(20px);
+        padding: 1rem 2rem;
+        border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+        transition: all 0.3s ease;
+      }
+
+      .header-title {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 900;
+        font-size: clamp(1.5rem, 4vw, 2.5rem);
+        margin: 0;
+        text-align: center;
+        background: linear-gradient(45deg, #a855f7, #8b5cf6, #7c3aed);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        text-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+        animation: glow 2s ease-in-out infinite alternate;
+        text-transform: uppercase;
+        letter-spacing: -0.02em;
+      }
+
       /* Hero Section */
       .hero {
         min-height: 100vh;
@@ -37,41 +67,66 @@
         position: relative;
         background: linear-gradient(135deg, #5c3d99 0%, #4c64ae 50%, #2d4a7a 100%);
         overflow: hidden;
+        padding-top: 80px;
       }
 
-      .hero::before {
-        content: '';
+      .hero-carousel {
         position: absolute;
         top: 0;
         left: 0;
-        right: 0;
-        bottom: 0;
-        background-image: url('https://static.wixstatic.com/media/86b1c8_db2a61ccfc33487cadc257663f491523~mv2.png');
-        background-size: cover;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+        overflow: hidden;
+      }
+
+      .carousel-track {
+        display: flex;
+        width: 800%;
+        height: 100%;
+        animation: scroll 20s linear infinite;
+      }
+
+      .carousel-slide {
+        width: 12.5%;
+        height: 100%;
+        background-size: 75%;
         background-position: center;
         background-repeat: no-repeat;
         opacity: 0.3;
-        z-index: 1;
+      }
+
+      .carousel-slide:nth-child(1) { background-image: url('https://static.wixstatic.com/media/86b1c8_b2d8ca49df644b768ff5b5edf01e4a2d~mv2.png'); }
+      .carousel-slide:nth-child(2) { background-image: url('https://static.wixstatic.com/media/86b1c8_2d816491cf534b53b2b2bac9ac0a558f~mv2.png'); }
+      .carousel-slide:nth-child(3) { background-image: url('https://static.wixstatic.com/media/86b1c8_aa13c5837d9344b793e3ec2b6f6c8801~mv2.png'); }
+      .carousel-slide:nth-child(4) { background-image: url('https://static.wixstatic.com/media/86b1c8_686e3c8dccdb4d388e8f176ef9808bab~mv2.png'); }
+      .carousel-slide:nth-child(5) { background-image: url('https://static.wixstatic.com/media/86b1c8_b2d8ca49df644b768ff5b5edf01e4a2d~mv2.png'); }
+      .carousel-slide:nth-child(6) { background-image: url('https://static.wixstatic.com/media/86b1c8_2d816491cf534b53b2b2bac9ac0a558f~mv2.png'); }
+      .carousel-slide:nth-child(7) { background-image: url('https://static.wixstatic.com/media/86b1c8_aa13c5837d9344b793e3ec2b6f6c8801~mv2.png'); }
+      .carousel-slide:nth-child(8) { background-image: url('https://static.wixstatic.com/media/86b1c8_686e3c8dccdb4d388e8f176ef9808bab~mv2.png'); }
+
+      @keyframes scroll {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
       }
 
       .hero-content {
         text-align: center;
-        z-index: 2;
+        z-index: 3;
         position: relative;
         max-width: 900px;
         padding: 2rem;
       }
 
       .hero h1 {
-        font-family: 'Fredoka One', cursive;
+        font-family: 'Poppins', sans-serif;
+        font-weight: 900;
         font-size: clamp(2.5rem, 6vw, 4.5rem);
         margin-bottom: 1rem;
-        background: linear-gradient(45deg, #7c3aed, #5e32c5, hsl(244, 62%, 32%));
-        -webkit-background-clip: text;
-        background-clip: text;
-        color: transparent;
+        color: white;
         text-shadow: 0 0 30px rgba(168, 85, 247, 0.3);
         animation: glow 2s ease-in-out infinite alternate;
+        letter-spacing: -0.02em;
       }
 
       @keyframes glow {
@@ -136,7 +191,8 @@
       }
 
       .section h2 {
-        font-family: 'Fredoka One', cursive;
+        font-family: 'Poppins', sans-serif;
+        font-weight: 800;
         font-size: clamp(2rem, 5vw, 3rem);
         text-align: center;
         margin-bottom: 3rem;
@@ -153,6 +209,16 @@
         padding: 3rem;
         text-align: center;
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      }
+
+      .bori-section h2 {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 800;
+      }
+
+      .bori-section p {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 400;
       }
 
       .bori-avatar {
@@ -287,8 +353,25 @@
   </head>
 
   <body class="landing-page">
+    <!-- Header -->
+    <header class="header">
+      <h1 class="header-title">Borí Cano Chat</h1>
+    </header>
+
     <!-- Hero Section -->
     <section class="hero">
+      <div class="hero-carousel">
+        <div class="carousel-track">
+          <div class="carousel-slide"></div>
+          <div class="carousel-slide"></div>
+          <div class="carousel-slide"></div>
+          <div class="carousel-slide"></div>
+          <div class="carousel-slide"></div>
+          <div class="carousel-slide"></div>
+          <div class="carousel-slide"></div>
+          <div class="carousel-slide"></div>
+        </div>
+      </div>
       <div class="hero-content">
         <h1>¡Chatea con Borí Cano ahora!</h1>
         <p>Tu guía pelícano en La Isla del Encanto. Descubre Vista Pelícano, Harbor Café y las mejores aventuras en Fajardo, Puerto Rico.</p>
@@ -309,7 +392,7 @@
       <div class="bori-section">
         <img src="https://static.wixstatic.com/media/86b1c8_aa13c5837d9344b793e3ec2b6f6c8801~mv2.png" alt="Borí Cano" class="bori-avatar" />
         <h2>¡Wepa! Soy Borí Cano</h2>
-        <p style="font-size: 1.2rem;">Tu guía pelícano, carismático y alegre, la voz oficial de Vista Pelícano en Isleta Marina, Fajardo. ¡Mi misión es que tu estadía sea por la maceta y que no se te pierda ningún detalle de La Isla del Encanto!</p>
+        <p style="font-size: 1.2rem; font-family: 'Poppins', sans-serif; font-weight: 400;">Tu guía pelícano, carismático y alegre, la voz oficial de Vista Pelícano en Isleta Marina, Fajardo. ¡Mi misión es que tu estadía sea por la maceta y que no se te pierda ningún detalle de La Isla del Encanto!</p>
       </div>
     </section>
 
@@ -321,8 +404,8 @@
           <img src="https://static.wixstatic.com/media/86b1c8_db2a61ccfc33487cadc257663f491523~mv2.png" alt="Vista desde el balcón de Vista Pelícano" style="width: 100%; border-radius: 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.3);" />
         </div>
         <div>
-          <h3 style="color: #a855f7; margin-bottom: 1.5rem;">Vistas brutal y comodidad a fuego en tu apartamento vacacional</h3>
-          <ul style="list-style: none; padding: 0;">
+          <h3 style="color: #a855f7; margin-bottom: 1.5rem; font-family: 'Poppins', sans-serif; font-weight: 700;">Vistas brutal y comodidad a fuego en tu apartamento vacacional</h3>
+          <ul style="list-style: none; padding: 0; font-family: 'Poppins', sans-serif; font-weight: 400;">
             <li style="margin: 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
               <span>🌊</span> Balcón privado con panorámicas de las islas
             </li>
@@ -344,10 +427,10 @@
     <!-- Harbor Café -->
     <section class="section">
       <div class="feature-card" style="max-width: 800px; margin: 0 auto;">
-        <h2>Harbor Café: ¡Un Jangueo Gastronómico en el Mar!</h2>
+        <h2 style="font-family: 'Poppins', sans-serif; font-weight: 800;">Harbor Café: ¡Un Jangueo Gastronómico en el Mar!</h2>
         <div style="font-size: 4rem; margin: 1rem 0;">🍔⛴️</div>
-        <h3 style="color: #a855f7;">¡El único restaurante en Puerto Rico al que llegas en ferry gratis!</h3>
-        <p>Harbor Café te espera en Isleta Marina con una deliciosa fusión caribeña e internacional. ¡No te pierdas el famoso Boriburger, una explosión de sabor con maduros y queso mozzarella!</p>
+        <h3 style="color: #a855f7; font-family: 'Poppins', sans-serif; font-weight: 700;">¡El único restaurante en Puerto Rico al que llegas en ferry gratis!</h3>
+        <p style="font-family: 'Poppins', sans-serif; font-weight: 400;">Harbor Café te espera en Isleta Marina con una deliciosa fusión caribeña e internacional. ¡No te pierdas el famoso Boriburger, una explosión de sabor con maduros y queso mozzarella!</p>
         <a href="chat.html" class="btn-primary" style="margin-top: 1rem;">Ver el menú completo</a>
       </div>
     </section>
@@ -355,28 +438,28 @@
     <!-- Aventuras -->
     <section class="section">
       <h2>Aventuras en La Isla del Encanto</h2>
-      <p style="text-align: center; font-size: 1.2rem; margin-bottom: 3rem;">¡De la selva a la bahía y de vuelta al mar! Puerto Rico te espera con aventuras para tu corillo.</p>
+      <p style="text-align: center; font-size: 1.2rem; margin-bottom: 3rem; font-family: 'Poppins', sans-serif; font-weight: 400;">¡De la selva a la bahía y de vuelta al mar! Puerto Rico te espera con aventuras para tu corillo.</p>
       
       <div class="features-grid">
         <div class="feature-card">
           <div class="feature-icon">🌿</div>
-          <h3>El Yunque</h3>
-          <p>Explora el único bosque tropical lluvioso de EE.UU.</p>
+          <h3 style="font-family: 'Poppins', sans-serif; font-weight: 700;">El Yunque</h3>
+          <p style="font-family: 'Poppins', sans-serif; font-weight: 400;">Explora el único bosque tropical lluvioso de EE.UU.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">✨</div>
-          <h3>Bahías Bioluminiscentes</h3>
-          <p>Maravíllate con la magia de las aguas que brillan</p>
+          <h3 style="font-family: 'Poppins', sans-serif; font-weight: 700;">Bahías Bioluminiscentes</h3>
+          <p style="font-family: 'Poppins', sans-serif; font-weight: 400;">Maravíllate con la magia de las aguas que brillan</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🏖️</div>
-          <h3>Playas de Ensueño</h3>
-          <p>Disfruta de Icacos y Palomino</p>
+          <h3 style="font-family: 'Poppins', sans-serif; font-weight: 700;">Playas de Ensueño</h3>
+          <p style="font-family: 'Poppins', sans-serif; font-weight: 400;">Disfruta de Icacos y Palomino</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🏍️</div>
-          <h3>Aventuras Extremas</h3>
-          <p>Vive la adrenalina con ATV, Zipline y Snorkel</p>
+          <h3 style="font-family: 'Poppins', sans-serif; font-weight: 700;">Aventuras Extremas</h3>
+          <p style="font-family: 'Poppins', sans-serif; font-weight: 400;">Vive la adrenalina con ATV, Zipline y Snorkel</p>
         </div>
       </div>
 
@@ -389,8 +472,8 @@
     <section class="section">
       <div class="two-columns">
         <div>
-          <h2 style="text-align: left;">Tu concierge boricua, siempre a tu lado</h2>
-          <p>Chatea por WhatsApp, habla por voz o usa nuestra web. Borí Cano está listo para bregar con todas tus preguntas, ofrecerte recomendaciones y hasta enviar órdenes a la cocina de Harbor Café. ¡Todo un mamey!</p>
+          <h2 style="text-align: left; font-family: 'Poppins', sans-serif; font-weight: 800;">Tu concierge boricua, siempre a tu lado</h2>
+          <p style="font-family: 'Poppins', sans-serif; font-weight: 400;">Chatea por WhatsApp, habla por voz o usa nuestra web. Borí Cano está listo para bregar con todas tus preguntas, ofrecerte recomendaciones y hasta enviar órdenes a la cocina de Harbor Café. ¡Todo un mamey!</p>
           
           <div style="display: flex; gap: 1rem; margin: 2rem 0; flex-wrap: wrap;">
             <span style="background: #25D366; padding: 0.5rem 1rem; border-radius: 25px; display: flex; align-items: center; gap: 0.5rem;">
@@ -406,27 +489,27 @@
         </div>
         <div style="text-align: center;">
           <div style="font-size: 8rem; color: #a855f7;">📱</div>
-          <p style="opacity: 0.8;">Interfaz amigable en español</p>
+          <p style="opacity: 0.8; font-family: 'Poppins', sans-serif; font-weight: 400;">Interfaz amigable en español</p>
         </div>
       </div>
     </section>
 
     <!-- Testimonials -->
     <section class="testimonials">
-      <h2 style="text-align: center;">Lo que dicen nuestros Panas</h2>
-      <p style="text-align: center; font-size: 1.2rem; opacity: 0.9;">Nuestros huéspedes lo confirman: ¡La experiencia con Borí Cano y Gabriela es por la maceta!</p>
+      <h2 style="text-align: center; font-family: 'Poppins', sans-serif; font-weight: 800;">Lo que dicen nuestros Panas</h2>
+      <p style="text-align: center; font-size: 1.2rem; opacity: 0.9; font-family: 'Poppins', sans-serif; font-weight: 400;">Nuestros huéspedes lo confirman: ¡La experiencia con Borí Cano y Gabriela es por la maceta!</p>
       
       <div class="testimonial-grid">
         <div class="testimonial">
-          <p>"¡Qué chévere la ayuda de Borí Cano para organizar nuestro día en Fajardo! Una maravilla."</p>
+          <p style="font-family: 'Poppins', sans-serif; font-weight: 400;">"¡Qué chévere la ayuda de Borí Cano para organizar nuestro día en Fajardo! Una maravilla."</p>
           <div style="margin-top: 1rem; color: #a855f7;">⭐⭐⭐⭐⭐</div>
         </div>
         <div class="testimonial">
-          <p>"La atención de Gabriela, la Superhost, es brutal. ¡Nos sentimos como en casa!"</p>
+          <p style="font-family: 'Poppins', sans-serif; font-weight: 400;">"La atención de Gabriela, la Superhost, es brutal. ¡Nos sentimos como en casa!"</p>
           <div style="margin-top: 1rem; color: #a855f7;">⭐⭐⭐⭐⭐</div>
         </div>
         <div class="testimonial">
-          <p>"Pedir la cena en Harbor Café fue un mamey gracias a Borí. ¡Recomendado 100%!"</p>
+          <p style="font-family: 'Poppins', sans-serif; font-weight: 400;">"Pedir la cena en Harbor Café fue un mamey gracias a Borí. ¡Recomendado 100%!"</p>
           <div style="margin-top: 1rem; color: #a855f7;">⭐⭐⭐⭐⭐</div>
         </div>
       </div>
@@ -434,7 +517,7 @@
 
     <!-- Footer -->
     <footer class="footer">
-      <h2>¡Empieza tu aventura inolvidable con Borí Cano en Puerto Rico!</h2>
+      <h2 style="font-family: 'Poppins', sans-serif; font-weight: 800;">¡Empieza tu aventura inolvidable con Borí Cano en Puerto Rico!</h2>
       
       <div class="cta-buttons" style="margin: 2rem 0;">
         <a href="https://wa.me/19393415337?text=Hola%20Bor%C3%AD%20Cano%2C%20quiero%20probar%20el%20concierge%20virtual%20%F0%9F%A6%A4" class="btn-primary" target="_blank">
@@ -446,14 +529,14 @@
       </div>
 
       <div class="footer-links">
-        <a href="#">Política de Privacidad</a>
-        <a href="#">Términos de Servicio</a>
-        <a href="#">Instagram</a>
-        <a href="#">Facebook</a>
-        <a href="mailto:info@vistapalicano.com">Contacto</a>
+        <a href="#" style="font-family: 'Poppins', sans-serif; font-weight: 400;">Política de Privacidad</a>
+        <a href="#" style="font-family: 'Poppins', sans-serif; font-weight: 400;">Términos de Servicio</a>
+        <a href="#" style="font-family: 'Poppins', sans-serif; font-weight: 400;">Instagram</a>
+        <a href="#" style="font-family: 'Poppins', sans-serif; font-weight: 400;">Facebook</a>
+        <a href="mailto:info@vistapalicano.com" style="font-family: 'Poppins', sans-serif; font-weight: 400;">Contacto</a>
       </div>
 
-      <p style="margin-top: 2rem; opacity: 0.7;">© 2024 Borí Cano - Vista Pelícano. Todos los derechos reservados.</p>
+      <p style="margin-top: 2rem; opacity: 0.7; font-family: 'Poppins', sans-serif; font-weight: 400;">© 2024 Borí Cano - Vista Pelícano. Todos los derechos reservados.</p>
     </footer>
   </body>
 </html>
