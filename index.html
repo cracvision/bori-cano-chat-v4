@@ -184,9 +184,6 @@
         gap: 1rem;
         justify-content: center;
         flex-wrap: wrap;
-        margin-top: auto;
-        margin-bottom: var(--cta-offset-desktop);
-        padding-bottom: max(0px, env(safe-area-inset-bottom));
       }
 
       .btn-primary, .btn-secondary {
@@ -387,6 +384,9 @@
         .cta-buttons {
           flex-direction: column;
           align-items: center;
+        }
+
+        .cta-block {
           margin-bottom: var(--cta-offset-mobile);
         }
 
@@ -475,6 +475,25 @@
       .pause-icon::after {
         right: 6px;
       }
+
+      /* Bloque que agrupa botones + hint */
+      .cta-block {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        margin-top: auto;
+        margin-bottom: var(--cta-offset-desktop);
+        padding-bottom: max(0px, env(safe-area-inset-bottom));
+      }
+
+      /* Hint con flechas (solo tipografía, no toca botones) */
+      .scroll-hint {
+        color: #fff;
+        text-align: center;
+        opacity: .8;
+        font-size: .9rem;
+      }
     </style>
   </head>
 
@@ -507,17 +526,17 @@
           <p>Tu guía pelícano en Isleta Marina. Descubre Vista Pelícano, Harbor Café y las mejores aventuras en Fajardo, Puerto Rico.</p>
         </div>
         
-        <div class="cta-buttons">
-          <button id="boriSpeakBtn" class="btn-secondary" type="button" aria-label="Reproducir demo de voz de Borí Cano">
-            <span class="play-icon"></span>Demo de voz
-          </button>
-          <a href="chat.html" class="btn-secondary">
-            <span>🎤</span> Hablar en Vivo
-          </a>
-        </div>
-        
-        <div style="color: white; text-align: center; margin-top: 0.5rem; opacity: 0.8; font-size: 0.9rem;">
-          ⇩ Scroll para ver más ⇩
+        <div class="cta-block">
+          <div class="cta-buttons">
+            <button id="boriSpeakBtn" class="btn-secondary" type="button" aria-label="Reproducir demo de voz de Borí Cano">
+              <span class="play-icon"></span>Demo de voz
+            </button>
+            <a href="chat.html" class="btn-secondary">
+              <span>🎤</span> Hablar en Vivo
+            </a>
+          </div>
+
+          <div class="scroll-hint">⇩ Scroll para ver más ⇩</div>
         </div>
       </div>
     </section>
