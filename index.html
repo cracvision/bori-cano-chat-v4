@@ -19,6 +19,10 @@
     <link rel="stylesheet" href="index.css" />
 
     <style>
+      :root { 
+        --header-h: 80px; 
+      }
+
       /* Estilos específicos para el landing page */
       .landing-page {
         background: #000;
@@ -85,14 +89,13 @@
 
       /* Hero Section */
       .hero {
-        min-height: 95vh;
+        min-height: 100vh;
+        padding-top: var(--header-h);
         display: flex;
-        align-items: center;
         justify-content: center;
         position: relative;
         background: linear-gradient(135deg, #5c3d99 0%, #4c64ae 50%, #2d4a7a 100%);
         overflow: hidden;
-        padding-top: 80px;
       }
 
       .hero-carousel {
@@ -136,18 +139,20 @@
       }
 
       .hero-content {
-        text-align: center;
-        z-index: 3;
-        position: relative;
         max-width: 900px;
+        margin: 0 auto;
         padding: 2rem;
         display: flex;
         flex-direction: column;
-        gap: 2rem;
+        min-height: calc(100vh - var(--header-h));
+        gap: 1rem;
+        text-align: center;
+        z-index: 3;
+        position: relative;
       }
 
       .hero-text {
-        margin-bottom: 3rem;
+        margin: 0;
       }
 
       .hero h1 {
@@ -177,7 +182,7 @@
         gap: 1rem;
         justify-content: center;
         flex-wrap: wrap;
-        margin-top: 2rem;
+        margin-top: auto;
       }
 
       .btn-primary, .btn-secondary {
@@ -371,6 +376,10 @@
 
       /* Responsive */
       @media (max-width: 768px) {
+        .hero-content {
+          min-height: calc(90vh - var(--header-h));
+        }
+
         .two-columns {
           grid-template-columns: 1fr;
           gap: 2rem;
@@ -486,8 +495,6 @@
         <div class="hero-text">
           <h1>¡Habla con Borí Cano en vivo!</h1>
           <p>Tu guía pelícano en Isleta Marina. Descubre Vista Pelícano, Harbor Café y las mejores aventuras en Fajardo, Puerto Rico.</p>
-          <br>
-          <br>
         </div>
         
         <div class="cta-buttons">
