@@ -414,6 +414,48 @@
       .text-button-separator {
         margin: 3rem 0;
       }
+
+      /* Play/Pause Icon Styles */
+      .play-icon, .pause-icon {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 2px solid white;
+        border-radius: 50%;
+        position: relative;
+        margin-right: 8px;
+        vertical-align: middle;
+      }
+
+      .play-icon::before {
+        content: '';
+        position: absolute;
+        left: 7px;
+        top: 4px;
+        width: 0;
+        height: 0;
+        border-left: 8px solid white;
+        border-top: 5px solid transparent;
+        border-bottom: 5px solid transparent;
+      }
+
+      .pause-icon::before,
+      .pause-icon::after {
+        content: '';
+        position: absolute;
+        top: 4px;
+        width: 2px;
+        height: 10px;
+        background-color: white;
+      }
+
+      .pause-icon::before {
+        left: 6px;
+      }
+
+      .pause-icon::after {
+        right: 6px;
+      }
     </style>
   </head>
 
@@ -449,11 +491,11 @@
         </div>
         
         <div class="cta-buttons">
+          <button id="boriSpeakBtn" class="btn-secondary" type="button" aria-label="Play Borí Cano voice demo">
+            <span class="play-icon"></span>Listen Demo
+          </button>
           <a href="chat.html" class="btn-secondary">
             <span>🎤</span> Talk Live
-          </a>
-          <a href="https://wa.me/19393415337?text=Hello%20Bor%C3%AD%20Cano%2C%20I%20want%20to%20try%20the%20virtual%20concierge%20%F0%9F%A6%A4" class="btn-primary" target="_blank">
-            <span>📱</span> Via WhatsApp
           </a>
         </div>
       </div>
@@ -630,9 +672,6 @@
         <a href="chat.html" class="btn-secondary">
           <span>🎤</span> Web Chat
         </a>
-        <a href="https://wa.me/19393415337?text=Hello%20Bor%C3%AD%20Cano%2C%20I%20want%20to%20try%20the%20virtual%20concierge%20%F0%9F%A6%A4" class="btn-primary" target="_blank">
-          <span>📱</span> WhatsApp: +1 (939) 341-5337
-        </a>
       </div>
     </section>
 
@@ -648,33 +687,92 @@
 
       <p style="margin-top: 2rem; opacity: 0.7; font-family: 'Poppins', sans-serif; font-weight: 400;">© 2024 Borí Cano - Vista Pelícano. All rights reserved.</p>
     </footer>
-  </body>
-</html>
-</html>
-</html>
-      <div class="cta-buttons">
-        <a href="https://wa.me/19393415337?text=Hello%20Bor%C3%AD%20Cano%2C%20I%20want%20to%20try%20the%20virtual%20concierge%20%F0%9F%A6%A4" class="btn-primary" target="_blank">
-          <span>📱</span> WhatsApp: +1 (939) 341-5337
-        </a>
-        <a href="chat.html" class="btn-secondary">
-          <span>🎤</span> Web Chat
-        </a>
-      </div>
-    </section>
 
-    <!-- Footer (solo contenido informativo) -->
-    <footer class="footer">
-      <div class="footer-links">
-        <a href="#" style="font-family: 'Poppins', sans-serif; font-weight: 400;">Privacy Policy</a>
-        <a href="#" style="font-family: 'Poppins', sans-serif; font-weight: 400;">Terms of Service</a>
-        <a href="#" style="font-family: 'Poppins', sans-serif; font-weight: 400;">Instagram</a>
-        <a href="#" style="font-family: 'Poppins', sans-serif; font-weight: 400;">Facebook</a>
-        <a href="mailto:info@vistapalicano.com" style="font-family: 'Poppins', sans-serif; font-weight: 400;">Contact</a>
-      </div>
+    <audio id="boriAudio" preload="auto" playsinline></audio>
 
-      <p style="margin-top: 2rem; opacity: 0.7; font-family: 'Poppins', sans-serif; font-weight: 400;">© 2024 Borí Cano - Vista Pelícano. All rights reserved.</p>
-    </footer>
+    <script>
+    (function(){
+      // Lista de audios (orden fijo)
+      const TRACKS = [
+        "https://static.wixstatic.com/mp3/86b1c8_3ab4f8e2f6e342f088b57c2c939a8d7c.mp3",
+        "https://static.wixstatic.com/mp3/86b1c8_37f15862d0d7420a83dd15c01fc4282b.mp3",
+        "https://static.wixstatic.com/mp3/86b1c8_f6c2575ab4bf48b487ecfdceccfee736.mp3",
+        "https://static.wixstatic.com/mp3/86b1c8_95f04663f8af40d3a56a13f2806759a3.mp3",
+        "https://static.wixstatic.com/mp3/86b1c8_0c413826d43d4c54abf6d6a66e48f4a3.mp3"
+      ];
+
+      const STORAGE_KEY = "boriSpeakIndex_v1";
+
+      const btn   = document.getElementById("boriSpeakBtn");
+      const audio = document.getElementById("boriAudio");
+      if (!btn || !audio) return; // no-op si no existen
+
+      // Recupera índice de la sesión (misma pestaña)
+      let idx = parseInt(sessionStorage.getItem(STORAGE_KEY) || "0", 10);
+      if (!Number.isInteger(idx) || idx < 0 || idx >= TRACKS.length) {
+        idx = 0;
+        sessionStorage.setItem(STORAGE_KEY, "0");
+      }
+
+      let isPlaying = false;
+
+      function setBtnState(playing){
+        isPlaying = playing;
+        btn.disabled = false;
+        btn.style.opacity = "1";
+        
+        const icon = btn.querySelector('.play-icon, .pause-icon');
+        if (playing) {
+          icon.className = 'pause-icon';
+          btn.innerHTML = '<span class="pause-icon"></span>Pause';
+        } else {
+          icon.className = 'play-icon';
+          btn.innerHTML = '<span class="play-icon"></span>Listen Demo';
+        }
+      }
+
+      function playCurrent(){
+        const src = TRACKS[idx];
+        if (!src) return;
+        audio.src = src;
+        audio.currentTime = 0;
+        audio.load();
+        audio.play()
+          .then(() => setBtnState(true))
+          .catch((err) => {
+            // Si el navegador bloquea la reproducción, avisa y no rompas el flujo
+            console.warn("Reproducción bloqueada o error:", err);
+            setBtnState(false);
+            alert("If you don't hear audio, tap again: the browser requested more interaction.");
+          });
+      }
+
+      function pauseAudio(){
+        audio.pause();
+        setBtnState(false);
+      }
+
+      btn.addEventListener("click", () => {
+        if (isPlaying) {
+          pauseAudio();
+        } else {
+          playCurrent();
+        }
+      });
+
+      audio.addEventListener("ended", () => {
+        setBtnState(false);
+        idx = (idx + 1) % TRACKS.length;
+        sessionStorage.setItem(STORAGE_KEY, String(idx));
+      });
+
+      audio.addEventListener("error", () => {
+        // Salta al siguiente si hay error en el archivo actual
+        setBtnState(false);
+        idx = (idx + 1) % TRACKS.length;
+        sessionStorage.setItem(STORAGE_KEY, String(idx));
+      });
+    })();
+    </script>
   </body>
-</html>
-</html>
 </html>
