@@ -20,7 +20,9 @@
 
     <style>
       :root { 
-        --header-h: 80px; 
+        --header-h: 80px;
+        --cta-offset-desktop: 6vh;
+        --cta-offset-mobile: 10vh;
       }
 
       /* Estilos específicos para el landing page */
@@ -89,7 +91,7 @@
 
       /* Hero Section */
       .hero {
-        min-height: 100vh;
+        min-height: 100dvh;
         padding-top: var(--header-h);
         display: flex;
         justify-content: center;
@@ -144,7 +146,7 @@
         padding: 2rem;
         display: flex;
         flex-direction: column;
-        min-height: calc(100vh - var(--header-h));
+        min-height: calc(100dvh - var(--header-h));
         gap: 1rem;
         text-align: center;
         z-index: 3;
@@ -183,6 +185,8 @@
         justify-content: center;
         flex-wrap: wrap;
         margin-top: auto;
+        margin-bottom: var(--cta-offset-desktop);
+        padding-bottom: max(0px, env(safe-area-inset-bottom));
       }
 
       .btn-primary, .btn-secondary {
@@ -380,6 +384,12 @@
           min-height: calc(90vh - var(--header-h));
         }
 
+        .cta-buttons {
+          flex-direction: column;
+          align-items: center;
+          margin-bottom: var(--cta-offset-mobile);
+        }
+
         .two-columns {
           grid-template-columns: 1fr;
           gap: 2rem;
@@ -504,6 +514,10 @@
           <a href="chat.html" class="btn-secondary">
             <span>🎤</span> Hablar en Vivo
           </a>
+        </div>
+        
+        <div style="color: white; text-align: center; margin-top: 0.5rem; opacity: 0.8; font-size: 0.9rem;">
+          ⇩ Scroll para ver más ⇩
         </div>
       </div>
     </section>

@@ -20,7 +20,9 @@
 
     <style>
       :root { 
-        --header-h: 80px; 
+        --header-h: 80px;
+        --cta-offset-desktop: 6vh;
+        --cta-offset-mobile: 10vh;
       }
 
       /* Estilos específicos para el landing page */
@@ -93,11 +95,13 @@
         justify-content: center;
         flex-wrap: wrap;
         margin-top: auto;
+        margin-bottom: var(--cta-offset-desktop);
+        padding-bottom: max(0px, env(safe-area-inset-bottom));
       }
 
       /* Hero Section */
       .hero {
-        min-height: 100vh;
+        min-height: 100dvh;
         padding-top: var(--header-h);
         display: flex;
         justify-content: center;
@@ -152,7 +156,7 @@
         padding: 2rem;
         display: flex;
         flex-direction: column;
-        min-height: calc(100vh - var(--header-h));
+        min-height: calc(100dvh - var(--header-h));
         gap: 1rem;
         text-align: center;
         z-index: 3;
@@ -383,6 +387,7 @@
         .cta-buttons {
           flex-direction: column;
           align-items: center;
+          margin-bottom: var(--cta-offset-mobile);
         }
 
         .btn-primary, .btn-secondary {
@@ -499,6 +504,10 @@
           <a href="chat.html" class="btn-secondary">
             <span>🎤</span> Talk Live
           </a>
+        </div>
+        
+        <div style="color: white; text-align: center; margin-top: 0.5rem; opacity: 0.8; font-size: 0.9rem;">
+          ⇩ Scroll to see more ⇩
         </div>
       </div>
     </section>
