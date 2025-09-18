@@ -89,13 +89,6 @@
         box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
       }
 
-      .cta-buttons {
-        display: flex;
-        gap: 1rem;
-        justify-content: center;
-        flex-wrap: wrap;
-      }
-
       /* Hero Section */
       .hero {
         min-height: 100dvh;
@@ -184,6 +177,13 @@
         font-size: clamp(1.1rem, 3vw, 1.4rem);
         margin-bottom: 0;
         opacity: 0.9;
+      }
+
+      .cta-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
       }
 
       .btn-primary, .btn-secondary {
@@ -373,6 +373,125 @@
 
       .footer-links a:hover {
         color: #a855f7;
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .hero-content {
+          min-height: calc(90vh - var(--header-h));
+        }
+
+        .cta-buttons {
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .cta-block {
+          margin-bottom: var(--cta-offset-mobile);
+        }
+
+        .two-columns {
+          grid-template-columns: 1fr;
+          gap: 2rem;
+        }
+
+        .btn-primary, .btn-secondary {
+          width: auto;
+          min-width: 200px;
+          justify-content: center;
+        }
+
+        .section {
+          padding: 3rem 1rem;
+        }
+
+        .bori-section {
+          padding: 2rem;
+        }
+
+        .footer-links {
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        .side-panel {
+          width: 280px;
+        }
+      }
+
+      /* Separación de contenido en secciones */
+      .section-content {
+        margin-bottom: 3rem;
+      }
+
+      .section-buttons {
+        text-align: center;
+        margin-top: 2rem;
+      }
+
+      .text-button-separator {
+        margin: 3rem 0;
+      }
+
+      /* Play/Pause Icon Styles */
+      .play-icon, .pause-icon {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 2px solid white;
+        border-radius: 50%;
+        position: relative;
+        margin-right: 8px;
+        vertical-align: middle;
+      }
+
+      .play-icon::before {
+        content: '';
+        position: absolute;
+        left: 7px;
+        top: 4px;
+        width: 0;
+        height: 0;
+        border-left: 8px solid white;
+        border-top: 5px solid transparent;
+        border-bottom: 5px solid transparent;
+      }
+
+      .pause-icon::before,
+      .pause-icon::after {
+        content: '';
+        position: absolute;
+        top: 4px;
+        width: 2px;
+        height: 10px;
+        background-color: white;
+      }
+
+      .pause-icon::before {
+        left: 6px;
+      }
+
+      .pause-icon::after {
+        right: 6px;
+      }
+
+      /* Bloque que agrupa botones + hint */
+      .cta-block {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        margin-top: auto;
+        margin-bottom: var(--cta-offset-desktop);
+        padding-bottom: max(0px, env(safe-area-inset-bottom));
+      }
+
+      /* Hint con flechas (solo tipografía, no toca botones) */
+      .scroll-hint {
+        color: #fff;
+        text-align: center;
+        opacity: .8;
+        font-size: .9rem;
       }
 
       /* ===== Hamburger Menu Styles ===== */
