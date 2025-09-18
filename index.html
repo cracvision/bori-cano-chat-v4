@@ -375,6 +375,176 @@
         color: #a855f7;
       }
 
+      /* ===== Hamburger Menu Styles ===== */
+      .hamburger-btn {
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+      }
+
+      .hamburger-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .hamburger-icon {
+        width: 24px;
+        height: 18px;
+        position: relative;
+        transform: rotate(0deg);
+        transition: 0.3s ease-in-out;
+      }
+
+      .hamburger-icon span {
+        display: block;
+        position: absolute;
+        height: 2px;
+        width: 100%;
+        background: white;
+        border-radius: 2px;
+        opacity: 1;
+        left: 0;
+        transform: rotate(0deg);
+        transition: 0.3s ease-in-out;
+      }
+
+      .hamburger-icon span:nth-child(1) { top: 0px; }
+      .hamburger-icon span:nth-child(2) { top: 8px; }
+      .hamburger-icon span:nth-child(3) { top: 16px; }
+
+      /* Side Panel */
+      .side-panel-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 9998;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+      }
+
+      .side-panel-overlay.active {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .side-panel {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 320px;
+        max-width: 85vw;
+        height: 100vh;
+        background: linear-gradient(180deg, #1a1a2e 0%, #2d2d5f 100%);
+        z-index: 9999;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        overflow-y: auto;
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+      }
+
+      .side-panel.active {
+        transform: translateX(0);
+      }
+
+      .side-panel-header {
+        padding: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .side-panel-title {
+        color: white;
+        font-family: 'Poppins', sans-serif;
+        font-weight: 700;
+        font-size: 1.4rem;
+        margin: 0;
+        background: linear-gradient(45deg, #a855f7, #8b5cf6);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+
+      .side-panel-close {
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        font-size: 1.5rem;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .side-panel-close:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .side-panel-content {
+        padding: 20px 0;
+      }
+
+      .menu-section {
+        margin-bottom: 30px;
+      }
+
+      .menu-section-title {
+        color: #a855f7;
+        font-family: 'Poppins', sans-serif;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin: 0 20px 15px 20px;
+        opacity: 0.8;
+      }
+
+      .menu-item {
+        display: block;
+        color: white;
+        text-decoration: none;
+        padding: 12px 20px;
+        font-family: 'Poppins', sans-serif;
+        font-weight: 400;
+        transition: all 0.3s ease;
+        border-left: 3px solid transparent;
+        cursor: pointer;
+      }
+
+      .menu-item:hover {
+        background: rgba(168, 85, 247, 0.1);
+        border-left-color: #a855f7;
+        color: #a855f7;
+      }
+
+      .menu-item.active {
+        background: rgba(168, 85, 247, 0.2);
+        border-left-color: #a855f7;
+        color: #a855f7;
+      }
+
+      .menu-item-icon {
+        margin-right: 12px;
+        font-size: 1.1rem;
+      }
+
       /* Responsive */
       @media (max-width: 768px) {
         .hero-content {
@@ -417,6 +587,10 @@
         .footer-links {
           flex-direction: column;
           gap: 1rem;
+        }
+
+        .side-panel {
+          width: 280px;
         }
       }
 
@@ -498,8 +672,77 @@
   </head>
 
   <body class="landing-page">
+    <!-- Side Panel Overlay -->
+    <div class="side-panel-overlay" id="sidePanelOverlay"></div>
+
+    <!-- Side Panel -->
+    <div class="side-panel" id="sidePanel">
+      <div class="side-panel-header">
+        <h2 class="side-panel-title">Borí Cano Menu</h2>
+        <button class="side-panel-close" id="sidePanelClose" aria-label="Cerrar menú">×</button>
+      </div>
+      <div class="side-panel-content">
+        <div class="menu-section">
+          <div class="menu-section-title">Navegación</div>
+          <a href="#inicio" class="menu-item" data-scroll="inicio">
+            <span class="menu-item-icon">🏠</span>Inicio
+          </a>
+          <a href="chat.html" class="menu-item">
+            <span class="menu-item-icon">💬</span>Chat con Borí
+          </a>
+        </div>
+        
+        <div class="menu-section">
+          <div class="menu-section-title">Secciones</div>
+          <a href="#bori-cano" class="menu-item" data-scroll="bori-cano">
+            <span class="menu-item-icon">🦆</span>Conoce a Borí Cano
+          </a>
+          <a href="#vista-pelicano" class="menu-item" data-scroll="vista-pelicano">
+            <span class="menu-item-icon">🏨</span>Vista Pelícano
+          </a>
+          <a href="#harbor-cafe" class="menu-item" data-scroll="harbor-cafe">
+            <span class="menu-item-icon">🍽️</span>Harbor Café
+          </a>
+          <a href="#aventuras" class="menu-item" data-scroll="aventuras">
+            <span class="menu-item-icon">🎯</span>Aventuras
+          </a>
+          <a href="#experiencia" class="menu-item" data-scroll="experiencia">
+            <span class="menu-item-icon">📱</span>Tu Experiencia
+          </a>
+          <a href="#testimonios" class="menu-item" data-scroll="testimonios">
+            <span class="menu-item-icon">⭐</span>Testimonios
+          </a>
+        </div>
+
+        <div class="menu-section">
+          <div class="menu-section-title">Enlaces Externos</div>
+          <a href="https://www.airbnb.com/rooms/1348755024446391064" target="_blank" class="menu-item">
+            <span class="menu-item-icon">🔗</span>Reservar en Airbnb
+          </a>
+          <a href="public/borishop/index.html" class="menu-item">
+            <span class="menu-item-icon">🛍️</span>Borí Shop
+          </a>
+          <a href="https://wa.me/19393415337" target="_blank" class="menu-item">
+            <span class="menu-item-icon">📱</span>WhatsApp
+          </a>
+          <a href="mailto:elboricano@vistapelicano.com" class="menu-item">
+            <span class="menu-item-icon">✉️</span>Email
+          </a>
+        </div>
+      </div>
+    </div>
+
     <!-- Header -->
     <header class="header">
+      <!-- Hamburger Menu Button -->
+      <button class="hamburger-btn" id="hamburgerBtn" aria-label="Abrir menú">
+        <div class="hamburger-icon">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </button>
+      
       <h1 class="header-title">Borí Cano Chat</h1>
       <div class="language-switcher">
         <a href="index_EN.html" class="btn-language">🇺🇸</a>
@@ -507,7 +750,7 @@
     </header>
 
     <!-- Hero Section -->
-    <section class="hero">
+    <section class="hero" id="inicio">
       <div class="hero-carousel">
         <div class="carousel-track">
           <div class="carousel-slide"></div>
@@ -542,7 +785,7 @@
     </section>
 
     <!-- Conoce a Borí Cano -->
-    <section class="section">
+    <section class="section" id="bori-cano">
       <div class="bori-section">
         <img src="https://static.wixstatic.com/media/86b1c8_b3bbe3419515472da014596c65ca9369~mv2.png" alt="Borí Cano" class="bori-avatar" />
         <h2>¡Wepa Panita! Soy Borí Cano</h2>
@@ -551,7 +794,7 @@
     </section>
 
     <!-- Vista Pelícano -->
-    <section class="section">
+    <section class="section" id="vista-pelicano">
       <h2>Tu Nido en el Paraíso: Vista Pelícano</h2>
       
       <div class="section-content">
@@ -609,7 +852,7 @@
     </section>
 
     <!-- Harbor Café -->
-    <section class="section">
+    <section class="section" id="harbor-cafe">
       <div class="feature-card" style="max-width: 800px; margin: 0 auto;">
         <div class="section-content">
           <h2 style="font-family: 'Poppins', sans-serif; font-weight: 800;">Harbor Café: ¡Un Jangueo Gastronómico en el Mar!</h2>
@@ -626,7 +869,7 @@
     </section>
 
     <!-- Aventuras -->
-    <section class="section">
+    <section class="section" id="aventuras">
       <div class="section-content">
         <h2>Aventuras en La Isla del Encanto</h2>
         <p style="text-align: center; font-size: 1.2rem; margin-bottom: 3rem; font-family: 'Poppins', sans-serif; font-weight: 400;">¡De la selva a la bahía y de vuelta al mar! Puerto Rico te espera con aventuras para tu corillo.</p>
@@ -661,7 +904,7 @@
     </section>
 
     <!-- Tu Experiencia -->
-    <section class="section">
+    <section class="section" id="experiencia">
       <div class="two-columns">
         <div>
           <div class="section-content">
@@ -689,7 +932,7 @@
     </section>
 
     <!-- Testimonials -->
-    <section class="testimonials">
+    <section class="testimonials" id="testimonios">
       <h2 style="text-align: center; font-family: 'Poppins', sans-serif; font-weight: 800;">Lo que dicen nuestros Panas</h2>
       <p style="text-align: center; font-size: 1.2rem; opacity: 0.9; font-family: 'Poppins', sans-serif; font-weight: 400;">Nuestros huéspedes lo confirman: ¡La experiencia con Borí Cano y Gabriela es por la maceta!</p>
       
@@ -730,9 +973,9 @@
       <div class="footer-links">
         <a href="#" style="font-family: 'Poppins', sans-serif; font-weight: 400;">Política de Privacidad</a>
         <a href="#" style="font-family: 'Poppins', sans-serif; font-weight: 400;">Términos de Servicio</a>
-        <a href="#" style="font-family: 'Poppins', sans-serif; font-weight: 400;">Instagram</a>
-        <a href="#" style="font-family: 'Poppins', sans-serif; font-weight: 400;">Facebook</a>
-        <a href="mailto:info@vistapalicano.com" style="font-family: 'Poppins', sans-serif; font-weight: 400;">Contacto</a>
+        <a href="https://www.instagram.com/vista_pelicano?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" style="font-family: 'Poppins', sans-serif; font-weight: 400;">Instagram</a>
+        <a href="https://www.facebook.com/profile.php?id=61574441405942" target="_blank" style="font-family: 'Poppins', sans-serif; font-weight: 400;">Facebook</a>
+        <a href="mailto:elboricano@vistapelicano.com" style="font-family: 'Poppins', sans-serif; font-weight: 400;">Contacto</a>
       </div>
 
       <p style="margin-top: 2rem; opacity: 0.7; font-family: 'Poppins', sans-serif; font-weight: 400;">© 2024 Borí Cano - Vista Pelícano. Todos los derechos reservados.</p>
@@ -824,6 +1067,91 @@
       });
     })();
     </script>
+
+    <!-- Hamburger Menu Script -->
+    <script>
+      (function() {
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const sidePanel = document.getElementById('sidePanel');
+        const sidePanelOverlay = document.getElementById('sidePanelOverlay');
+        const sidePanelClose = document.getElementById('sidePanelClose');
+        const menuItems = document.querySelectorAll('.menu-item[data-scroll]');
+
+        function openSidePanel() {
+          sidePanel.classList.add('active');
+          sidePanelOverlay.classList.add('active');
+          document.body.style.overflow = 'hidden';
+        }
+
+        function closeSidePanel() {
+          sidePanel.classList.remove('active');
+          sidePanelOverlay.classList.remove('active');
+          document.body.style.overflow = '';
+        }
+
+        function scrollToSection(sectionId) {
+          const section = document.getElementById(sectionId);
+          if (section) {
+            const headerHeight = document.querySelector('.header').offsetHeight;
+            const offsetTop = section.offsetTop - headerHeight - 20;
+            
+            window.scrollTo({
+              top: offsetTop,
+              behavior: 'smooth'
+            });
+            
+            closeSidePanel();
+          }
+        }
+
+        // Event listeners
+        hamburgerBtn.addEventListener('click', openSidePanel);
+        sidePanelClose.addEventListener('click', closeSidePanel);
+        sidePanelOverlay.addEventListener('click', closeSidePanel);
+
+        // Scroll to section functionality
+        menuItems.forEach(item => {
+          item.addEventListener('click', function(e) {
+            e.preventDefault();
+            const sectionId = this.getAttribute('data-scroll');
+            scrollToSection(sectionId);
+          });
+        });
+
+        // Close with ESC key
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape' && sidePanel.classList.contains('active')) {
+            closeSidePanel();
+          }
+        });
+
+        // Highlight active section in menu
+        function highlightActiveSection() {
+          const sections = document.querySelectorAll('section[id]');
+          const headerHeight = document.querySelector('.header').offsetHeight;
+          
+          let currentSection = '';
+          sections.forEach(section => {
+            const sectionTop = section.offsetTop - headerHeight - 100;
+            if (window.scrollY >= sectionTop) {
+              currentSection = section.getAttribute('id');
+            }
+          });
+
+          menuItems.forEach(item => {
+            item.classList.remove('active');
+            if (item.getAttribute('data-scroll') === currentSection) {
+              item.classList.add('active');
+            }
+          });
+        }
+
+        // Update active section on scroll
+        window.addEventListener('scroll', highlightActiveSection);
+        
+        // Initial highlight
+        highlightActiveSection();
+      })();
+    </script>
   </body>
-</html>
 </html>
