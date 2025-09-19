@@ -276,7 +276,7 @@
         width: 200px;
         height: 200px;
         margin: 0 auto 2rem;
-        border-radius: 50%;
+        border-radius: 15px;
         overflow: hidden;
         border: 5px solid #a855f7;
         box-shadow: 0 10px 30px rgb(228, 85, 247);
@@ -288,7 +288,7 @@
         height: 100%;
         object-fit: cover;
         aspect-ratio: 1/1;
-        border-radius: 50%;
+        border-radius: 10px;
       }
 
       .video-mute-btn {
@@ -1134,6 +1134,116 @@
 
     <!-- Hamburger Menu Script -->
     <script>
+    // Video Auto-Management System
+    (function() {
+      let activeVideo = null;
+      let isTabVisible = true;
+      
+      // Track tab visibility
+      document.addEventListener('visibilitychange', () => {
+        isTabVisible = !document.hidden;
+        if (!isTabVisible) {
+          pauseAllVideos();
+        } else {
+          // Re-evaluate all videos when tab becomes visible
+          setTimeout(() => videos.forEach(checkVideoVisibility), 100);
+        }
+      });
+
+      // Get all auto-managed videos
+      const videos = Array.from(document.querySelectorAll('.bori-video'));
+      
+      // Pause all videos
+      function pauseAllVideos() {
+        videos.forEach(video => {
+          if (!video.paused) video.pause();
+        });
+        activeVideo = null;
+      }
+
+      // Play video safely (only if tab visible and no other video playing)
+      function playVideoSafely(video) {
+        if (!isTabVisible) return;
+        
+        if (activeVideo && activeVideo !== video && !activeVideo.paused) {
+          activeVideo.pause();
+        }
+        
+        video.play().then(() => {
+          activeVideo = video;
+        }).catch(() => {
+          // Autoplay blocked, ignore silently
+        });
+      }
+
+      // Check if video should play based on visibility
+      function checkVideoVisibility(video) {
+        const rect = video.getBoundingClientRect();
+        const videoHeight = rect.height;
+        const visibleHeight = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0);
+        const visibilityRatio = Math.max(0, visibleHeight) / videoHeight;
+        
+        if (visibilityRatio >= 0.6) {
+          playVideoSafely(video);
+        } else if (visibilityRatio < 0.35) {
+          if (!video.paused) video.pause();
+          if (activeVideo === video) activeVideo = null;
+        }
+      }
+
+      // Setup intersection observer for each video
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (isTabVisible) {
+            checkVideoVisibility(entry.target);
+          }
+        });
+      }, {
+        threshold: [0, 0.35, 0.6, 1],
+        rootMargin: '50px'
+      });
+
+      // Initialize videos
+      videos.forEach(video => {
+        observer.observe(video);
+        
+        // Ensure video stays muted for autoplay
+        video.addEventListener('loadstart', () => {
+          video.muted = true;
+        });
+        
+        // Handle play events
+        video.addEventListener('play', () => {
+          if (activeVideo && activeVideo !== video && !activeVideo.paused) {
+            activeVideo.pause();
+          }
+          activeVideo = video;
+        });
+      });
+
+      // Mute button functionality
+      videos.forEach((video, index) => {
+        const muteBtn = document.getElementById('mute-btn-en');
+        if (!muteBtn) return;
+        
+        const muteIcon = muteBtn.querySelector('.mute-icon');
+        const unmuteIcon = muteBtn.querySelector('.unmute-icon');
+        
+        muteBtn.addEventListener('click', () => {
+          video.muted = !video.muted;
+          
+          if (video.muted) {
+            muteIcon.classList.remove('hidden');
+            unmuteIcon.classList.add('hidden');
+          } else {
+            muteIcon.classList.add('hidden');
+            unmuteIcon.classList.remove('hidden');
+          }
+        });
+      });
+    })();
+
+    // Hamburger Menu functionality
       (function() {
         const hamburgerBtn = document.getElementById('hamburgerBtn');
         const sidePanel = document.getElementById('sidePanel');
