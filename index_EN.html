@@ -708,6 +708,13 @@
         font-size: 1.1rem;
       }
 
+      .menu-item-icon img {
+        width: 1.1em;
+        height: 1.1em;
+        object-fit: contain;
+        vertical-align: middle;
+      }
+
       /* Responsive */
       @media (max-width: 768px) {
         .side-panel {
@@ -734,23 +741,23 @@
             <span class="menu-item-icon">🏠</span>Home
           </a>
           <a href="chat.html" class="menu-item">
-            <span class="menu-item-icon">💬</span>Chat with Borí
+            <span class="menu-item-icon"><img src="https://static.wixstatic.com/media/86b1c8_a580ba30bcde4a4295cd8a24be89c00f~mv2.png" alt="Chat"></span>Chat with Borí
           </a>
         </div>
         
         <div class="menu-section">
           <div class="menu-section-title">Sections</div>
           <a href="#meet-bori" class="menu-item" data-scroll="meet-bori">
-            <span class="menu-item-icon">🦆</span>Meet Borí Cano
+            <span class="menu-item-icon"><img src="https://static.wixstatic.com/media/86b1c8_bd5df068afc84ad98ace2f7028442af3~mv2.png" alt="Borí"></span>Meet Borí Cano
           </a>
           <a href="#vista-pelicano" class="menu-item" data-scroll="vista-pelicano">
-            <span class="menu-item-icon">🏨</span>Vista Pelícano
+            <span class="menu-item-icon"><img src="https://static.wixstatic.com/media/86b1c8_d2fcb5579cea4f94bc04e72b3870cca0~mv2.png" alt="Vista"></span>Vista Pelícano
           </a>
           <a href="#harbor-cafe" class="menu-item" data-scroll="harbor-cafe">
-            <span class="menu-item-icon">🍽️</span>Harbor Café
+            <span class="menu-item-icon"><img src="https://static.wixstatic.com/media/86b1c8_c041d4fc2f2f4a878f3900bb48ce0d98~mv2.png" alt="Harbor"></span>Harbor Café
           </a>
           <a href="#adventures" class="menu-item" data-scroll="adventures">
-            <span class="menu-item-icon">🎯</span>Adventures
+            <span class="menu-item-icon"><img src="https://static.wixstatic.com/media/86b1c8_4fe899beb2a54e468da9843975ac94b1~mv2.png" alt="Adventures"></span>Adventures
           </a>
           <a href="#experience" class="menu-item" data-scroll="experience">
             <span class="menu-item-icon">📱</span>Your Experience
@@ -1302,7 +1309,11 @@
         // Highlight active section in menu
         function highlightActiveSection() {
           const sections = document.querySelectorAll('section[id]');
-          const headerHeight = document.querySelector('.header').offsetHeight;
+          const header = document.querySelector('.header');
+          
+          if (!header || sections.length === 0) return;
+          
+          const headerHeight = header.offsetHeight;
           
           let currentSection = '';
           sections.forEach(section => {
@@ -1313,6 +1324,7 @@
           });
 
           menuItems.forEach(item => {
+            if (!item) return;
             item.classList.remove('active');
             if (item.getAttribute('data-scroll') === currentSection) {
               item.classList.add('active');
