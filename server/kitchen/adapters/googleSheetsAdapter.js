@@ -31,20 +31,21 @@ class GoogleSheetsAdapter extends DataAdapter {
     this.doc = new GoogleSpreadsheet(this.spreadsheetId, auth);
     await this.doc.loadInfo();
 
-    // Get or create Orders sheet
+    // Get or create Orders sheet with exact headers
     this.ordersSheet = this.doc.sheetsByTitle['Orders'] || await this.doc.addSheet({
       title: 'Orders',
       headerValues: [
-        'order_number', 'client_context_id', 'status', 'items_json', 'customer_name',
-        'phone_e164', 'notes', 'total_amount', 'received_at', 'confirmed_at',
-        'preparing_at', 'ready_at', 'completed_at', 'cancelled_at'
+        'id', 'client_context_id', 'order_number', 'status', 'items_json', 
+        'customer_name', 'phone_e164', 'table_number', 'notes', 'total_amount', 
+        'received_at', 'confirmed_at', 'preparing_at', 'ready_at', 'completed_at', 
+        'cancelled_at', 'created_at', 'updated_at'
       ]
     });
 
-    // Get or create Events sheet
+    // Get or create Events sheet with exact headers
     this.eventsSheet = this.doc.sheetsByTitle['Events'] || await this.doc.addSheet({
       title: 'Events',
-      headerValues: ['order_number', 'event_type', 'from_status', 'to_status', 'timestamp', 'user_id', 'notes']
+      headerValues: ['id', 'order_id', 'event_type', 'from_status', 'to_status', 'metadata_json', 'created_at']
     });
   }
 
@@ -62,35 +63,40 @@ class GoogleSheetsAdapter extends DataAdapter {
     // Generate new order number
     const orderCount = rows.length;
     const orderNumber = generateOrderNumber(orderCount);
+    const timestamp = new Date().toISOString();
 
     const order = {
-      order_number: orderNumber,
+      id: orderNumber, // Using order_number as id for consistency
       client_context_id: orderData.client_context_id,
+      order_number: orderNumber,
       status: OrderStatus.RECEIVED_UNCONFIRMED,
       items_json: JSON.stringify(orderData.items || []),
       customer_name: orderData.customer_name || '',
       phone_e164: orderData.phone_e164 || '',
+      table_number: orderData.table_number || '',
       notes: orderData.notes || '',
       total_amount: orderData.total_amount || 0,
-      received_at: new Date().toISOString(),
+      received_at: timestamp,
       confirmed_at: '',
       preparing_at: '',
       ready_at: '',
       completed_at: '',
-      cancelled_at: ''
+      cancelled_at: '',
+      created_at: timestamp,
+      updated_at: timestamp
     };
 
     await this.ordersSheet.addRow(order);
 
     // Log creation event
     await this.logEvent({
-      order_number: orderNumber,
+      id: `evt_${Date.now()}`,
+      order_id: orderNumber,
       event_type: EventType.ORDER_CREATED,
       from_status: '',
       to_status: OrderStatus.RECEIVED_UNCONFIRMED,
-      timestamp: order.received_at,
-      user_id: 'system',
-      notes: 'Order created from n8n'
+      metadata_json: JSON.stringify({ user_id: 'system', source: 'n8n' }),
+      created_at: timestamp
     });
 
     return this.formatOrder(order);
@@ -111,6 +117,7 @@ class GoogleSheetsAdapter extends DataAdapter {
     
     // Update order status and timestamp
     orderRow.set('status', toStatus);
+    orderRow.set('updated_at', timestamp);
     
     const timestampField = this.getTimestampField(toStatus);
     if (timestampField) {
@@ -121,13 +128,13 @@ class GoogleSheetsAdapter extends DataAdapter {
 
     // Log event
     await this.logEvent({
-      order_number: orderNumber,
+      id: `evt_${Date.now()}`,
+      order_id: orderNumber,
       event_type: EventType.STATUS_CHANGE,
       from_status: fromStatus,
       to_status: toStatus,
-      timestamp,
-      user_id: userId || 'unknown',
-      notes: notes || ''
+      metadata_json: JSON.stringify({ user_id: userId || 'unknown', notes: notes || '' }),
+      created_at: timestamp
     });
 
     return this.rowToOrder(orderRow);
@@ -154,7 +161,7 @@ class GoogleSheetsAdapter extends DataAdapter {
     await this.ensureInit();
     
     const rows = await this.ordersSheet.getRows();
-    const orderRow = rows.find(row => row.get('order_number') === orderNumber);
+    const orderRow = rows.find(row => row.get('order_number') === orderNumber || row.get('id') === orderNumber);
     
     if (!orderRow) {
       return null;
@@ -177,12 +184,14 @@ class GoogleSheetsAdapter extends DataAdapter {
 
   rowToOrder(row) {
     const data = {
-      order_number: row.get('order_number'),
+      id: row.get('order_number') || row.get('id'),
+      order_number: row.get('order_number') || row.get('id'),
       client_context_id: row.get('client_context_id'),
       status: row.get('status'),
       items: JSON.parse(row.get('items_json') || '[]'),
       customer_name: row.get('customer_name'),
       phone_e164: row.get('phone_e164'),
+      table_number: row.get('table_number'),
       notes: row.get('notes'),
       total_amount: parseFloat(row.get('total_amount')) || 0,
       received_at: row.get('received_at'),
@@ -190,7 +199,9 @@ class GoogleSheetsAdapter extends DataAdapter {
       preparing_at: row.get('preparing_at'),
       ready_at: row.get('ready_at'),
       completed_at: row.get('completed_at'),
-      cancelled_at: row.get('cancelled_at')
+      cancelled_at: row.get('cancelled_at'),
+      created_at: row.get('created_at'),
+      updated_at: row.get('updated_at')
     };
     return this.formatOrder(data);
   }

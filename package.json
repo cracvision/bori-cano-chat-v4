@@ -4,8 +4,8 @@
   "description": "Borí Cano Chat - Your virtual concierge in Puerto Rico",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js",
+    "start": "node server/index.js",
+    "dev": "nodemon server/index.js",
     "build": "webpack --mode production",
     "lint": "eslint .",
     "test": "jest"
@@ -17,7 +17,7 @@
     "google-spreadsheet": "^4.1.2",
     "libphonenumber-js": "^1.10.51",
     "nodemon": "^2.0.22",
-    "dotenv": "^16.0.3",
+    "dotenv": "^16.3.1",
     "express-validator": "^7.0.1"
   },
   "devDependencies": {

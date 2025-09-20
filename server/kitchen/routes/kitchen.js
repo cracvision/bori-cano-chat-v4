@@ -34,7 +34,7 @@ function requireApiKey(req, res, next) {
   const expectedKey = process.env.API_KEY;
 
   if (!expectedKey) {
-    return res.status(500).json({ error: 'API key not configured' });
+    return res.status(500).json({ error: 'API_KEY not configured' });
   }
 
   if (!apiKey || apiKey !== expectedKey) {
@@ -44,8 +44,14 @@ function requireApiKey(req, res, next) {
   next();
 }
 
-// Middleware: Kitchen access validation (placeholder - integrate with your auth)
+// Middleware: Kitchen access validation
 function requireKitchenAccess(req, res, next) {
+  // Development bypass
+  if (process.env.KITCHEN_DEV_BYPASS === '1') {
+    req.user = { id: 'dev', role: 'ADMIN' };
+    return next();
+  }
+
   // TODO: Implement actual JWT validation and role checking
   // For now, assume user is authenticated with kitchen access
   req.user = { id: 'kitchen-user', role: 'KITCHEN' };

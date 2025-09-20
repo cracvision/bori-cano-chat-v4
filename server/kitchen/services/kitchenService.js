@@ -16,12 +16,12 @@ class KitchenService {
     return await this.dataAdapter.createOrder(orderData);
   }
 
-  async updateOrderStatus(orderNumber, toStatus, userId = null, notes = null) {
+  async updateOrderStatus(orderId, toStatus, userId = null, notes = null) {
     // Get current order to validate transition
-    const currentOrder = await this.dataAdapter.getOrderById(orderNumber);
+    const currentOrder = await this.dataAdapter.getOrderById(orderId);
     
     if (!currentOrder) {
-      throw new Error(`Order ${orderNumber} not found`);
+      throw new Error(`Order ${orderId} not found`);
     }
 
     if (!isValidStatusTransition(currentOrder.status, toStatus)) {
@@ -29,7 +29,7 @@ class KitchenService {
     }
 
     const updatedOrder = await this.dataAdapter.updateOrderStatus(
-      orderNumber, 
+      orderId, 
       toStatus, 
       userId, 
       notes
@@ -47,8 +47,8 @@ class KitchenService {
     return await this.dataAdapter.getActiveOrders();
   }
 
-  async getOrderById(orderNumber) {
-    return await this.dataAdapter.getOrderById(orderNumber);
+  async getOrderById(orderId) {
+    return await this.dataAdapter.getOrderById(orderId);
   }
 
   async sendReadyNotification(order) {
