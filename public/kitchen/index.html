@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kitchen Dashboard - Borí Cano</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="kitchen.css">
+</head>
+<body>
+  <div id="app">
+    <header class="header">
+      <div class="header-content">
+        <h1>🍳 Kitchen Dashboard</h1>
+        <div class="header-actions">
+          <span id="lastUpdate" class="last-update">Last update: --</span>
+          <button id="refreshBtn" class="btn btn-secondary">Refresh</button>
+          <a href="/" class="btn btn-outline">← Back to App</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <div class="kitchen-layout">
+        <!-- Order List (Left Panel) -->
+        <div class="orders-panel">
+          <div class="panel-header">
+            <h2>Active Orders</h2>
+            <span id="orderCount" class="order-count">0 orders</span>
+          </div>
+          <div id="ordersList" class="orders-list">
+            <!-- Orders will be populated here -->
+          </div>
+        </div>
+
+        <!-- Order Detail (Right Panel) -->
+        <div class="detail-panel">
+          <div id="orderDetail" class="order-detail">
+            <div class="empty-state">
+              <div class="empty-icon">📋</div>
+              <h3>Select an order to view details</h3>
+              <p>Choose an order from the left panel to see items and actions</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Mobile Order Detail Modal -->
+    <div id="mobileModal" class="mobile-modal">
+      <div class="mobile-modal-content">
+        <div class="mobile-modal-header">
+          <h3 id="mobileModalTitle">Order Details</h3>
+          <button id="closeMobileModal" class="btn-close">×</button>
+        </div>
+        <div id="mobileModalBody" class="mobile-modal-body">
+          <!-- Content will be populated here -->
+        </div>
+      </div>
+      <div class="mobile-modal-overlay"></div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="loading-spinner hidden">
+      <div class="spinner"></div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+  </div>
+
+  <script src="kitchen.js"></script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "name": "@bori-cano/kitchen-module",
+  "version": "1.0.0",
+  "description": "Kitchen order management module for Borí Cano Chat",
+  "main": "routes.js",
+  "dependencies": {
+    "google-spreadsheet": "^4.1.2",
+    "google-auth-library": "^9.4.1",
+    "libphonenumber-js": "^1.10.51",
+    "axios": "^1.6.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3"
+  },
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch"
+  }
+}
