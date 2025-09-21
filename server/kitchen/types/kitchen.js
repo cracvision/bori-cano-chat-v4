@@ -26,11 +26,11 @@ const VALID_STATUS_TRANSITIONS = {
   [OrderStatus.CANCELLED]: []
 };
 
-/**
- * @typedef {Object} Item
- * @property {string} name
- * @property {number} quantity
- * @property {string} [notes]
+module.exports = {
+  OrderStatus,
+  EventType,
+  VALID_STATUS_TRANSITIONS
+};
  * @property {number} [price]
  */
 

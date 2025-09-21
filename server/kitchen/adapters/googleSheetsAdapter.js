@@ -66,7 +66,7 @@ class GoogleSheetsAdapter extends DataAdapter {
     const timestamp = new Date().toISOString();
 
     const order = {
-      id: orderNumber, // Using order_number as id for consistency
+      id: orderNumber,
       client_context_id: orderData.client_context_id,
       order_number: orderNumber,
       status: OrderStatus.RECEIVED_UNCONFIRMED,
@@ -106,7 +106,7 @@ class GoogleSheetsAdapter extends DataAdapter {
     await this.ensureInit();
     
     const rows = await this.ordersSheet.getRows();
-    const orderRow = rows.find(row => row.get('order_number') === orderNumber);
+    const orderRow = rows.find(row => row.get('order_number') === orderNumber || row.get('id') === orderNumber);
     
     if (!orderRow) {
       throw new Error(`Order ${orderNumber} not found`);
