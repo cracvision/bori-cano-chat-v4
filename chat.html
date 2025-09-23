@@ -314,7 +314,7 @@
     </main>
 
     <!-- Audio de fondo -->
-    <audio id="background-audio" src="https://static.wixstatic.com/mp3/86b1c8_b7e332ee3f4b4d2bb6da2f935f0b5a17.mp3" preload="auto"></audio>
+    <audio id="background-audio" src="https://static.wixstatic.com/mp3/86b1c8_a1bd589ba7e547dc8a7a4cd761c40135.mp3" preload="auto"></audio>
 
     <!-- Karaoke + Play/Pause -->
     <script>
@@ -324,7 +324,7 @@
         const logo = document.querySelector(".header-logo");
         const lyricsContainer = document.getElementById("lyrics-container");
 
-        /* KARAOKE LYRICS DATA - TEMPORARILY DISABLED
+        // KARAOKE LYRICS DATA
         const lyricsData = [
           { stanza: 0, time: 0.16, text: "Desde el balcón de Vista Pelícano," },
           { stanza: 0, time: 1.16, text: "mirando el mar azulito," },
@@ -390,7 +390,6 @@
             }
           }
         }
-        */
 
         if (playPauseButton && audio && logo && lyricsContainer) {
           const playIconSVG  = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
@@ -405,28 +404,28 @@
               playPauseButton.classList.add("playing");
               playPauseButton.setAttribute("aria-label", "Pausar música");
               logo.classList.add("pulsing");
-              // lyricsContainer.classList.add("visible"); // DISABLED
+              lyricsContainer.classList.add("visible");
             } else {
               audio.pause();
               playPauseButton.innerHTML = playIconSVG;
               playPauseButton.classList.remove("playing");
               playPauseButton.setAttribute("aria-label", "Reproducir música");
               logo.classList.remove("pulsing");
-              // lyricsContainer.classList.remove("visible"); // DISABLED
+              lyricsContainer.classList.remove("visible");
             }
           };
 
           playPauseButton.addEventListener("click", togglePlayPause);
-          // audio.addEventListener("timeupdate", updateLyrics); // DISABLED
+          audio.addEventListener("timeupdate", updateLyrics);
           audio.addEventListener("ended", () => {
             playPauseButton.innerHTML = playIconSVG;
             playPauseButton.classList.remove("playing");
             playPauseButton.setAttribute("aria-label", "Reproducir música");
             audio.currentTime = 0;
             logo.classList.remove("pulsing");
-            // lyricsContainer.classList.remove("visible"); // DISABLED
-            // lyricsContainer.innerHTML = ""; // DISABLED
-            // currentLyricIndex = -1; // DISABLED
+            lyricsContainer.classList.remove("visible");
+            lyricsContainer.innerHTML = "";
+            currentLyricIndex = -1;
           });
         }
       })();
@@ -434,4 +433,5 @@
 
     <div class="version-label">V3.8.0</div>
   </body>
+</html>
 </html>
