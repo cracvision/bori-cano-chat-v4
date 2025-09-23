@@ -23,3 +23,6 @@ env/
 # Archivos de sistema operativo
 .DS_Store
 Thumbs.db
+
+#Legacy
+legacy/
