@@ -37,12 +37,25 @@
       .bori-modal__img.is-ready,
       .bori-video.is-ready{opacity:1}
 
-      /* Caption / Title */
       .bori-modal__caption{
         padding:8px 12px;background:#0f0f1f;color:#cfd2ff;font-size:12px;
         font-family:Poppins,system-ui,sans-serif
       }
       .hidden{display:none !important}
+
+      /* Karaoke UI */
+      .karaoke-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+      .karaoke-status{font-size:12px;opacity:.8}
+      .enable-audio{
+        display:none;margin-left:8px;background:#5F2EEA;color:#fff;border:0;
+        padding:8px 10px;border-radius:10px;cursor:pointer;font-size:12px
+      }
+
+      /* Letras + header anim */
+      .lyric-line{margin:0 0 8px;opacity:.85}
+      .lyric-line.active{font-weight:700;color:#E4DEFF;opacity:1}
+      .header-logo.pulsing{animation:pulse 1.5s infinite}
+      @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.03)}100%{transform:scale(1)}}
     </style>
   </head>
 
@@ -50,7 +63,7 @@
     <!-- Header -->
     <header class="app-header">
       <div class="header-left">
-        <a href="index.html" class="audio-button" aria-label="Volver a la página principal" style="display: flex; align-items: center; justify-content: center;">
+        <a href="index.html" class="audio-button" aria-label="Volver a la página principal" style="display:flex;align-items:center;justify-content:center">
           <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
             <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
           </svg>
@@ -76,12 +89,16 @@
       <elevenlabs-convai agent-id="agent_0301k2g45tvaere8gnrgvbj9f89k"></elevenlabs-convai>
       <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
 
-      <!-- ===== Client Tools: showImageModal + showVideoModal ===== -->
+      <!-- ===== Client Tools: showImageModal + showVideoModal + KARAOKE TOOLS ===== -->
       <script>
         (function () {
           /* ====================== UTILIDADES ====================== */
           const DEFAULT_BALCONY_MP4 = "https://video.wixstatic.com/video/86b1c8_84dff914082b4b9ea86d9f693b233e3c/1080p/mp4/file.mp4";
           const enqueue = (()=>{ let p=Promise.resolve(); return fn => (p=p.then(fn).catch(()=>{})); })();
+
+          function $(sel){ return document.querySelector(sel); }
+          function add(el, cls){ el && el.classList.add(cls); }
+          function remove(el, cls){ el && el.classList.remove(cls); }
 
           /* ====================== MODAL DE IMAGEN ====================== */
           function ensureImageModal () {
@@ -116,7 +133,6 @@
             dlg.appendChild(body);
             document.body.appendChild(dlg);
 
-            // Cerrar
             dlg.querySelector('#img-close').addEventListener('click', () => closeImageModal('user'));
             dlg.addEventListener('cancel', (e)=>{ e.preventDefault(); closeImageModal('esc'); });
 
@@ -209,7 +225,6 @@
             dlg.appendChild(body);
             document.body.appendChild(dlg);
 
-            // Cerrar
             dlg.querySelector('#video-close').addEventListener('click', () => closeVideoModal('user'));
             dlg.addEventListener('cancel', (e)=>{ e.preventDefault(); closeVideoModal('esc'); });
 
@@ -240,7 +255,6 @@
               slot.appendChild(iframe);
               return;
             }
-            // MP4 / archivo directo
             const v = document.createElement('video');
             v.src = url;
             v.className = 'bori-video';
@@ -248,8 +262,7 @@
             v.playsInline = true;
             v.addEventListener('canplay', ()=> requestAnimationFrame(()=> v.classList.add('is-ready')));
             slot.appendChild(v);
-            // Intento de autoplay (silencioso si falla por policies)
-            v.play?.().catch(()=>{ /* ignore */ });
+            v.play?.().catch(()=>{ /* ignore autoplay errors */ });
           }
 
           function openVideoModal ({ url } = {}) {
@@ -268,23 +281,153 @@
             return { ok:true, reason };
           }
 
+          /* ====================== MODAL DE KARAOKE ====================== */
+          function ensureKaraokeModal () {
+            let dlg = document.getElementById('karaoke-dialog');
+            if (dlg) return dlg;
+
+            dlg = document.createElement('dialog');
+            dlg.id = 'karaoke-dialog';
+            dlg.className = 'bori-modal';
+            dlg.setAttribute('aria-modal','true');
+
+            const bar = document.createElement('div');
+            bar.className = 'bori-modal__bar';
+            bar.innerHTML = `
+              <div id="karaoke-title" style="font-weight:700;font-size:14px">Karaoke</div>
+              <div class="karaoke-controls">
+                <button id="kar-play"  class="btn primary">Play</button>
+                <button id="kar-pause" class="btn">Pause</button>
+                <button id="kar-stop"  class="btn">Stop</button>
+                <span id="kar-status" class="karaoke-status"></span>
+                <button id="kar-enable" class="enable-audio">Habilitar audio</button>
+                <button id="kar-close" class="btn">Cerrar</button>
+              </div>
+            `;
+
+            const body = document.createElement('div');
+            body.className = 'bori-modal__body';
+            body.innerHTML = `
+              <div class="bori-modal__stage" style="color:#cfd2ff; font-size:13px; text-align:center; padding:0 16px;">
+                <div>
+                  <p style="opacity:.9">Disfruta la canción de Borí Cano. Si el audio no arranca, toca <strong>Habilitar audio</strong>.</p>
+                  <p style="opacity:.7">Puedes decir: “pausa”, “stop” o “cerrar”.</p>
+                </div>
+              </div>
+            `;
+
+            dlg.appendChild(bar);
+            dlg.appendChild(body);
+            document.body.appendChild(dlg);
+
+            // Wiring de botones
+            const audio = document.getElementById('background-audio');
+            const status = () => $('#kar-status');
+            const btnEnable = () => $('#kar-enable');
+
+            async function tryPlayFromUI(){
+              try{
+                await audio.play();
+                add($('.header-logo'),'pulsing');
+                add($('#lyrics-container'),'visible');
+                status().textContent = 'Reproduciendo';
+                btnEnable().style.display = 'none';
+              }catch(e){
+                status().textContent = 'Permiso de audio requerido';
+                btnEnable().style.display = '';
+              }
+            }
+            $('#kar-play').onclick  = tryPlayFromUI;
+            $('#kar-pause').onclick = ()=>{ audio.pause(); remove($('.header-logo'),'pulsing'); status().textContent='Pausado'; };
+            $('#kar-stop').onclick  = ()=>{ audio.pause(); audio.currentTime=0; remove($('.header-logo'),'pulsing'); remove($('#lyrics-container'),'visible'); status().textContent='Detenido'; };
+            $('#kar-enable').onclick= tryPlayFromUI;
+
+            $('#kar-close').onclick = ()=> dlg.close('user');
+            dlg.addEventListener('cancel', (e)=>{ e.preventDefault(); dlg.close('esc'); });
+
+            return dlg;
+          }
+
+          async function playKaraokeInternal(){
+            const dlg = ensureKaraokeModal();
+            if (!dlg.open && typeof dlg.showModal === 'function') dlg.showModal();
+
+            const audio = document.getElementById('background-audio');
+            try{
+              await audio.play();
+              add($('.header-logo'),'pulsing');
+              add($('#lyrics-container'),'visible');
+              $('#kar-status').textContent = 'Reproduciendo';
+              $('#kar-enable').style.display = 'none';
+              return { ok:true, state:'playing' };
+            }catch(e){
+              // Autoplay bloqueado: mostramos botón para el gesto del usuario
+              $('#kar-status').textContent = 'Permiso de audio requerido';
+              $('#kar-enable').style.display = '';
+              return { ok:false, error:'autoplay-blocked', needsGesture:true };
+            }
+          }
+
+          function openKaraokeInternal(){
+            const dlg = ensureKaraokeModal();
+            if (!dlg.open && typeof dlg.showModal === 'function') dlg.showModal();
+            $('#kar-status').textContent = 'Listo para reproducir';
+            return { ok:true, state:'opened' };
+          }
+
+          function pauseKaraokeInternal(){
+            const audio = document.getElementById('background-audio');
+            audio.pause();
+            remove($('.header-logo'),'pulsing');
+            $('#kar-status')?.textContent = 'Pausado';
+            return { ok:true, state:'paused' };
+          }
+
+          function stopKaraokeInternal(){
+            const audio = document.getElementById('background-audio');
+            audio.pause(); audio.currentTime = 0;
+            remove($('.header-logo'),'pulsing');
+            remove($('#lyrics-container'),'visible');
+            $('#kar-status')?.textContent = 'Detenido';
+            return { ok:true, state:'stopped' };
+          }
+
+          function closeKaraokeInternal(){
+            const dlg = document.getElementById('karaoke-dialog');
+            if (dlg?.open) dlg.close('tool');
+            return { ok:true, state:'closed' };
+          }
+
           /* ====================== REGISTRO DE CLIENT TOOLS ====================== */
           const safeTools = {
+            // Imágenes / Video (como ya tenías)
             showImageModal: (args) => enqueue(()=> openImageModal(args || {})),
             showimageModal: (args) => enqueue(()=> openImageModal(args || {})), // alias defensivo
             showVideoModal: (args) => enqueue(()=> openVideoModal(args || {})),
             closeImage:     () => enqueue(()=> closeImageModal('tool')),
             closeVideo:     () => enqueue(()=> closeVideoModal('tool')),
+
+            // Karaoke (¡NUEVO!)
+            openKaraoke:  () => enqueue(()=> openKaraokeInternal()),
+            playKaraoke:  () => enqueue(()=> playKaraokeInternal()),
+            pauseKaraoke: () => enqueue(()=> pauseKaraokeInternal()),
+            stopKaraoke:  () => enqueue(()=> stopKaraokeInternal()),
+            closeKaraoke: () => enqueue(()=> closeKaraokeInternal()),
+
+            // Debug opcional
+            logMessage:   ({ message }) => { console.log('[logMessage]', message); return { ok:true }; },
           };
 
           function registerNow(widget){
             try{
               if (typeof widget.setConfig === 'function') {
                 widget.setConfig({ clientTools: { ...(widget.clientTools||{}), ...safeTools } });
+                console.log('[ClientTools] registrados via setConfig');
               } else {
                 widget.clientTools = { ...(widget.clientTools||{}), ...safeTools };
+                console.log('[ClientTools] registrados via propiedad clientTools');
               }
-            }catch(e){ /* noop */ }
+            }catch(e){ console.warn('[ClientTools] error setConfig:', e); }
           }
 
           function tryRegisterClientTools(tries=0) {
@@ -306,17 +449,24 @@
             tryRegisterClientTools();
           }
 
-          // Exponer para pruebas manuales
-          window.__boriShowImage = (u)=>enqueue(()=>openImageModal(u));
-          window.__boriShowVideo = (u)=>enqueue(()=>openVideoModal(u));
+          // Exponer para pruebas manuales en consola
+          window.__bori = {
+            showImage: (args)=> enqueue(()=> openImageModal(args||{})),
+            showVideo: (args)=> enqueue(()=> openVideoModal(args||{})),
+            karOpen:   ()=> enqueue(()=> openKaraokeInternal()),
+            karPlay:   ()=> enqueue(()=> playKaraokeInternal()),
+            karPause:  ()=> enqueue(()=> pauseKaraokeInternal()),
+            karStop:   ()=> enqueue(()=> stopKaraokeInternal()),
+            karClose:  ()=> enqueue(()=> closeKaraokeInternal()),
+          };
         })();
       </script>
     </main>
 
-    <!-- Audio de fondo -->
+    <!-- Audio de fondo (pista del karaoke) -->
     <audio id="background-audio" src="https://static.wixstatic.com/mp3/86b1c8_a1bd589ba7e547dc8a7a4cd761c40135.mp3" preload="auto"></audio>
 
-    <!-- Karaoke + Play/Pause -->
+    <!-- Karaoke + Play/Pause manual (tu UX existente) -->
     <script>
       (function () {
         const playPauseButton = document.getElementById("play-pause-button");
@@ -431,7 +581,6 @@
       })();
     </script>
 
-    <div class="version-label">V3.8.0</div>
+    <div class="version-label">V3.9.0</div>
   </body>
-</html>
 </html>
