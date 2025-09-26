@@ -11,51 +11,69 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet" />
 
     <style>
-      /* ===== Modal base ===== */
-      dialog.bori-modal{
-        width:min(960px,96vw);height:min(80vh,720px);
-        border:none;border-radius:14px;padding:0;overflow:hidden;
-        background:#0b0b15;color:#fff;box-shadow:0 10px 40px rgba(0,0,0,.35)
+      /* ===== Modales base ===== */
+      dialog.bori-modal {
+        width: min(960px, 96vw);
+        height: min(80vh, 720px);
+        border: none;
+        border-radius: 14px;
+        padding: 0;
+        overflow: hidden;
+        background: #0b0b15;
+        color: #fff;
+        box-shadow: 0 10px 40px rgba(0,0,0,.35);
       }
-      .bori-modal__bar{
-        display:flex;align-items:center;justify-content:space-between;
-        padding:10px 12px;background:#141428;font-family:Poppins,system-ui,sans-serif
+      .bori-modal__bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 12px;
+        background: #141428;
+        font-family: Poppins, system-ui, sans-serif;
       }
-      .bori-modal__bar .btn{
-        background:#2a2a4a;color:#fff;border:0;padding:8px 10px;border-radius:10px;cursor:pointer;font-size:12px
+      .bori-modal__bar .btn {
+        background: #2a2a4a;
+        color: #fff;
+        border: 0;
+        padding: 8px 10px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 12px;
       }
-      .bori-modal__bar .btn.primary{background:#5F2EEA}
-      .bori-modal__body{height:calc(100% - 44px);position:relative}
+      .bori-modal__bar .btn.primary { background: #5F2EEA; }
+      .bori-modal__body { height: calc(100% - 44px); position: relative; }
+      .bori-modal__stage {
+        display: grid;
+        place-items: center;
+        height: 100%;
+        background: #0b0b15;
+      }
+      .bori-modal__img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        opacity: 0;
+        transition: opacity .32s ease;
+      }
+      .bori-modal__img.is-ready { opacity: 1; }
+      .bori-modal__caption {
+        padding: 8px 12px;
+        background: #0f0f1f;
+        color: #cfd2ff;
+        font-size: 12px;
+        font-family: Poppins, system-ui, sans-serif;
+      }
+      .hidden { display: none !important; }
 
-      /* Lienzo */
-      .bori-modal__stage{
-        display:flex;align-items:center;justify-content:center;
-        height:100%;background:#000;position:relative
-      }
-      .bori-modal__img,
-      .bori-video{max-width:100%;max-height:100%;object-fit:contain;opacity:0;transition:opacity .32s ease;background:#000}
-      .bori-modal__img.is-ready,
-      .bori-video.is-ready{opacity:1}
-
-      .bori-modal__caption{
-        padding:8px 12px;background:#0f0f1f;color:#cfd2ff;font-size:12px;
-        font-family:Poppins,system-ui,sans-serif
-      }
-      .hidden{display:none !important}
-
-      /* Karaoke UI */
-      .karaoke-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-      .karaoke-status{font-size:12px;opacity:.8}
-      .enable-audio{
-        display:none;margin-left:8px;background:#5F2EEA;color:#fff;border:0;
-        padding:8px 10px;border-radius:10px;cursor:pointer;font-size:12px
-      }
-
-      /* Letras + header anim */
-      .lyric-line{margin:0 0 8px;opacity:.85}
-      .lyric-line.active{font-weight:700;color:#E4DEFF;opacity:1}
-      .header-logo.pulsing{animation:pulse 1.5s infinite}
-      @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.03)}100%{transform:scale(1)}}
+      /* Header/Karaoke mínimos (tu CSS externo ya maquilla más) */
+      .app-header { display:flex; align-items:center; gap:12px; padding:10px 14px; }
+      .header-left { display:flex; align-items:center; gap:10px; }
+      .header-logo { height: 40px; }
+      .audio-button { width:36px; height:36px; border-radius:50%; border:none; cursor:pointer; }
+      #lyrics-container { padding:10px 14px; min-height: 20px; }
+      .lyric-line { margin: 4px 0; opacity:.6; }
+      .lyric-line.active { opacity: 1; }
+      .version-label { position: fixed; right: 8px; bottom: 6px; opacity: .5; font: 12px/1 Poppins,system-ui,sans-serif; }
     </style>
   </head>
 
@@ -63,11 +81,6 @@
     <!-- Header -->
     <header class="app-header">
       <div class="header-left">
-        <a href="index.html" class="audio-button" aria-label="Volver a la página principal" style="display:flex;align-items:center;justify-content:center">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
-          </svg>
-        </a>
         <button id="play-pause-button" class="audio-button" aria-label="Reproducir música"></button>
         <img
           src="https://static.wixstatic.com/media/86b1c8_2d816491cf534b53b2b2bac9ac0a558f~mv2.png"
@@ -89,393 +102,250 @@
       <elevenlabs-convai agent-id="agent_0301k2g45tvaere8gnrgvbj9f89k"></elevenlabs-convai>
       <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
 
-      <!-- ===== Client Tools: showImageModal + showVideoModal + KARAOKE TOOLS ===== -->
+      <!-- ===== Client Tools: showImageModal + showVideoModal ===== -->
       <script>
         (function () {
-          /* ====================== UTILIDADES ====================== */
-          const DEFAULT_BALCONY_MP4 = "https://video.wixstatic.com/video/86b1c8_84dff914082b4b9ea86d9f693b233e3c/1080p/mp4/file.mp4";
-          const enqueue = (()=>{ let p=Promise.resolve(); return fn => (p=p.then(fn).catch(()=>{})); })();
+          "use strict";
 
-          function $(sel){ return document.querySelector(sel); }
-          function add(el, cls){ el && el.classList.add(cls); }
-          function remove(el, cls){ el && el.classList.remove(cls); }
+          /* ---------- Constantes ---------- */
+          var DEFAULT_BALCONY_MP4 =
+            "https://video.wixstatic.com/video/86b1c8_84dff914082b4b9ea86d9f693b233e3c/1080p/mp4/file.mp4";
 
-          /* ====================== MODAL DE IMAGEN ====================== */
-          function ensureImageModal () {
-            let dlg = document.getElementById('img-dialog');
-            if (dlg) return dlg;
-
-            dlg = document.createElement('dialog');
-            dlg.id = 'img-dialog';
-            dlg.className = 'bori-modal';
-            dlg.setAttribute('aria-modal','true');
-
-            const bar = document.createElement('div');
-            bar.className = 'bori-modal__bar';
-            bar.innerHTML = `
-              <div id="img-title" style="font-weight:700;font-size:14px">Imagen</div>
-              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-                <a id="img-open" class="btn primary" target="_blank" rel="noopener noreferrer">Abrir</a>
-                <button id="img-close" class="btn">Cerrar</button>
-              </div>
-            `;
-
-            const body = document.createElement('div');
-            body.className = 'bori-modal__body';
-            body.innerHTML = `
-              <div class="bori-modal__stage">
-                <img id="img-view" class="bori-modal__img" alt="" />
-              </div>
-              <div id="img-caption" class="bori-modal__caption hidden"></div>
-            `;
-
-            dlg.appendChild(bar);
-            dlg.appendChild(body);
-            document.body.appendChild(dlg);
-
-            dlg.querySelector('#img-close').addEventListener('click', () => closeImageModal('user'));
-            dlg.addEventListener('cancel', (e)=>{ e.preventDefault(); closeImageModal('esc'); });
-
-            return dlg;
-          }
-
-          function setImgTitleAndCaption(dlg, title='', caption=''){
-            const titleEl = dlg.querySelector('#img-title');
-            const capEl = dlg.querySelector('#img-caption');
-            titleEl.textContent = title || 'Imagen';
-            capEl.textContent = caption || '';
-            capEl.classList.toggle('hidden', !caption);
-          }
-
+          /* ---------- Utils ---------- */
+          function isHttpUrl(u){ return typeof u === "string" && /^https?:\/\//i.test(u); }
           function loadImage(url){
-            return new Promise((resolve, reject)=>{
-              const im = new Image();
-              im.onload = ()=>resolve(url);
-              im.onerror = ()=>reject(new Error('image-load-failed'));
+            return new Promise(function(resolve, reject){
+              var im = new Image();
+              im.onload = function(){ resolve(url); };
+              im.onerror = function(){ reject(new Error("image-load-failed")); };
               im.src = url;
             });
           }
 
-          function showUrlInImgModal(dlg, { url, title='', caption='', alt='', fit='contain' } = {}) {
-            const img = dlg.querySelector('#img-view');
-            img.classList.remove('is-ready');
-            img.style.objectFit = (fit === 'cover' ? 'cover' : 'contain');
-
-            return loadImage(url)
-              .then(()=>{
-                img.src = url;
-                img.alt = alt || title || '';
-                dlg.querySelector('#img-open').href = url;
-                setImgTitleAndCaption(dlg, title, caption);
-                requestAnimationFrame(()=>img.classList.add('is-ready'));
-                return { ok:true, url };
-              })
-              .catch(()=>{
-                const fallback = 'https://static.wixstatic.com/media/86b1c8_2d816491cf534b53b2b2bac9ac0a558f~mv2.png';
-                img.src = fallback;
-                img.alt = 'Imagen no disponible';
-                setImgTitleAndCaption(dlg, 'Imagen no disponible', 'No se pudo cargar la imagen solicitada.');
-                dlg.querySelector('#img-open').href = url;
-                requestAnimationFrame(()=>img.classList.add('is-ready'));
-                return { ok:false, error:'image-load-failed', url };
-              });
-          }
-
-          function openImageModal ({ url, title='', caption='', alt='', fit='contain' } = {}) {
-            const dlg = ensureImageModal();
-            if (!dlg.open && typeof dlg.showModal === 'function') dlg.showModal();
-            return showUrlInImgModal(dlg, { url, title, caption, alt, fit });
-          }
-
-          function closeImageModal(reason='close'){
-            const dlg = document.getElementById('img-dialog');
-            if (dlg?.open) dlg.close(reason);
-            return { ok:true, reason };
-          }
-
-          /* ====================== MODAL DE VIDEO ====================== */
-          function ensureVideoModal () {
-            let dlg = document.getElementById('video-dialog');
+          /* ---------- IMG MODAL ---------- */
+          function ensureImgModal(){
+            var dlg = document.getElementById("img-dialog");
             if (dlg) return dlg;
 
-            dlg = document.createElement('dialog');
-            dlg.id = 'video-dialog';
-            dlg.className = 'bori-modal';
-            dlg.setAttribute('aria-modal','true');
+            dlg = document.createElement("dialog");
+            dlg.id = "img-dialog";
+            dlg.className = "bori-modal";
+            dlg.setAttribute("aria-modal", "true");
 
-            const bar = document.createElement('div');
-            bar.className = 'bori-modal__bar';
-            bar.innerHTML = `
-              <div id="video-title" style="font-weight:700;font-size:14px">Video</div>
-              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-                <a id="video-open" class="btn primary" target="_blank" rel="noopener noreferrer">Abrir</a>
-                <button id="video-close" class="btn">Cerrar</button>
-              </div>
-            `;
+            var bar = document.createElement("div");
+            bar.className = "bori-modal__bar";
+            bar.innerHTML =
+              '<div id="img-title" style="font-weight:700;font-size:14px">Imagen</div>' +
+              '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">' +
+              '  <a id="img-open" class="btn primary" target="_blank" rel="noopener noreferrer">Abrir</a>' +
+              '  <button id="img-close" class="btn">Cerrar</button>' +
+              "</div>";
 
-            const body = document.createElement('div');
-            body.className = 'bori-modal__body';
-            body.innerHTML = `
-              <div class="bori-modal__stage">
-                <div id="video-slot" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#000"></div>
-              </div>
-            `;
+            var body = document.createElement("div");
+            body.className = "bori-modal__body";
+            body.innerHTML =
+              '<div class="bori-modal__stage">' +
+              '  <img id="img-view" class="bori-modal__img" alt="" />' +
+              "</div>" +
+              '<div id="img-caption" class="bori-modal__caption hidden"></div>';
 
             dlg.appendChild(bar);
             dlg.appendChild(body);
             document.body.appendChild(dlg);
 
-            dlg.querySelector('#video-close').addEventListener('click', () => closeVideoModal('user'));
-            dlg.addEventListener('cancel', (e)=>{ e.preventDefault(); closeVideoModal('esc'); });
+            dlg.querySelector("#img-close").addEventListener("click", function(){ if(dlg.open) dlg.close("user"); });
+            dlg.addEventListener("cancel", function(e){ e.preventDefault(); if(dlg.open) dlg.close("esc"); });
 
             return dlg;
           }
 
-          function isYouTube(url){
-            return /(?:youtube\.com\/watch\?v=|youtu\.be\/)/i.test(url);
-          }
-          function toYouTubeEmbed(url){
-            const idMatch = url.match(/(?:v=|be\/)([A-Za-z0-9_-]{6,})/);
-            const id = idMatch ? idMatch[1] : '';
-            return id ? `https://www.youtube.com/embed/${id}?rel=0&playsinline=1` : url;
+          function setImgTitleAndCaption(dlg, title, caption){
+            var t = dlg.querySelector("#img-title");
+            var c = dlg.querySelector("#img-caption");
+            t.textContent = title || "Imagen";
+            c.textContent = caption || "";
+            c.classList.toggle("hidden", !caption);
           }
 
-          function setVideoSource(dlg, url){
-            const slot = dlg.querySelector('#video-slot');
-            slot.innerHTML = '';
-            if (isYouTube(url)){
-              const iframe = document.createElement('iframe');
-              iframe.src = toYouTubeEmbed(url);
-              iframe.width = '100%';
-              iframe.height = '100%';
-              iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+          function openImageModal(args){
+            args = args || {};
+            var url = args.url || "";
+            var title = args.title || "";
+            var caption = args.caption || "";
+            var alt = args.alt || "";
+
+            var dlg = ensureImgModal();
+            if (!dlg.open && typeof dlg.showModal === "function") dlg.showModal();
+
+            var img = dlg.querySelector("#img-view");
+            img.classList.remove("is-ready");
+            if (!isHttpUrl(url)){
+              // Fallback
+              url = "https://static.wixstatic.com/media/86b1c8_2d816491cf534b53b2b2bac9ac0a558f~mv2.png";
+              title = "Imagen no disponible";
+              caption = "No se pudo cargar la imagen solicitada.";
+              alt = "Imagen no disponible";
+            }
+            loadImage(url).then(function(){
+              img.src = url;
+              img.alt = alt || title || "";
+              dlg.querySelector("#img-open").href = url;
+              setImgTitleAndCaption(dlg, title, caption);
+              requestAnimationFrame(function(){ img.classList.add("is-ready"); });
+            }).catch(function(){
+              var fallback = "https://static.wixstatic.com/media/86b1c8_2d816491cf534b53b2b2bac9ac0a558f~mv2.png";
+              img.src = fallback;
+              img.alt = "Imagen no disponible";
+              setImgTitleAndCaption(dlg, "Imagen no disponible", "No se pudo cargar la imagen solicitada.");
+              dlg.querySelector("#img-open").href = url || "#";
+              requestAnimationFrame(function(){ img.classList.add("is-ready"); });
+            });
+
+            return { ok: true, url: url };
+          }
+
+          /* ---------- VIDEO MODAL ---------- */
+          function ensureVideoModal(){
+            var dlg = document.getElementById("video-dialog");
+            if (dlg) return dlg;
+
+            dlg = document.createElement("dialog");
+            dlg.id = "video-dialog";
+            dlg.className = "bori-modal";
+            dlg.setAttribute("aria-modal", "true");
+
+            var bar = document.createElement("div");
+            bar.className = "bori-modal__bar";
+            bar.innerHTML =
+              '<div style="font-weight:700;font-size:14px">Video</div>' +
+              '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">' +
+              '  <button id="video-close" class="btn">Cerrar</button>' +
+              "</div>";
+
+            var body = document.createElement("div");
+            body.className = "bori-modal__body";
+            body.innerHTML =
+              '<div class="bori-modal__stage">' +
+              '  <video id="bori-video" controls playsinline style="max-width:100%; max-height:100%; background:#000"></video>' +
+              "</div>";
+
+            dlg.appendChild(bar);
+            dlg.appendChild(body);
+            document.body.appendChild(dlg);
+
+            dlg.querySelector("#video-close").addEventListener("click", function(){ if(dlg.open) dlg.close("user"); });
+            dlg.addEventListener("cancel", function(e){ e.preventDefault(); if(dlg.open) dlg.close("esc"); });
+
+            return dlg;
+          }
+
+          function openVideoModal(args){
+            args = args || {};
+            var url = args.url;
+            if (!isHttpUrl(url)) url = DEFAULT_BALCONY_MP4;
+
+            var dlg = ensureVideoModal();
+            var video = dlg.querySelector("#bori-video");
+
+            // Reset sources to avoid caching previous blob
+            video.pause();
+            while (video.firstChild) video.removeChild(video.firstChild);
+
+            // Si es MP4 directo
+            if (/\.mp4(\?|$)/i.test(url)){
+              var source = document.createElement("source");
+              source.src = url;
+              source.type = "video/mp4";
+              video.appendChild(source);
+            } else {
+              // YouTube u otros -> usar iframe fallback
+              var stage = dlg.querySelector(".bori-modal__stage");
+              var existing = stage.querySelector("iframe");
+              if (existing) existing.remove();
+
+              var iframe = document.createElement("iframe");
+              iframe.width = "100%";
+              iframe.height = "100%";
+              iframe.allow =
+                "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
               iframe.allowFullscreen = true;
-              iframe.style.border = '0';
-              iframe.className = 'bori-video is-ready';
-              slot.appendChild(iframe);
-              return;
+              iframe.style.border = "0";
+              iframe.src = url;
+              stage.appendChild(iframe);
             }
-            const v = document.createElement('video');
-            v.src = url;
-            v.className = 'bori-video';
-            v.controls = true;
-            v.playsInline = true;
-            v.addEventListener('canplay', ()=> requestAnimationFrame(()=> v.classList.add('is-ready')));
-            slot.appendChild(v);
-            v.play?.().catch(()=>{ /* ignore autoplay errors */ });
+
+            if (!dlg.open && typeof dlg.showModal === "function") dlg.showModal();
+
+            // Autoplay puede bloquearse; dejamos controles visibles
+            video.addEventListener("canplay", function onReady(){
+              video.removeEventListener("canplay", onReady);
+              // No forzamos autoplay por políticas; el usuario puede darle play
+            });
+
+            return { ok: true, url: url };
           }
 
-          function openVideoModal ({ url } = {}) {
-            const dlg = ensureVideoModal();
-            const finalUrl = (typeof url === 'string' && url.startsWith('http')) ? url : DEFAULT_BALCONY_MP4;
-            setVideoSource(dlg, finalUrl);
-            dlg.querySelector('#video-open').href = finalUrl;
-            dlg.querySelector('#video-title').textContent = 'Video';
-            if (!dlg.open && typeof dlg.showModal === 'function') dlg.showModal();
-            return { ok:true, url: finalUrl };
-          }
-
-          function closeVideoModal(reason='close'){
-            const dlg = document.getElementById('video-dialog');
-            if (dlg?.open) dlg.close(reason);
-            return { ok:true, reason };
-          }
-
-          /* ====================== MODAL DE KARAOKE ====================== */
-          function ensureKaraokeModal () {
-            let dlg = document.getElementById('karaoke-dialog');
-            if (dlg) return dlg;
-
-            dlg = document.createElement('dialog');
-            dlg.id = 'karaoke-dialog';
-            dlg.className = 'bori-modal';
-            dlg.setAttribute('aria-modal','true');
-
-            const bar = document.createElement('div');
-            bar.className = 'bori-modal__bar';
-            bar.innerHTML = `
-              <div id="karaoke-title" style="font-weight:700;font-size:14px">Karaoke</div>
-              <div class="karaoke-controls">
-                <button id="kar-play"  class="btn primary">Play</button>
-                <button id="kar-pause" class="btn">Pause</button>
-                <button id="kar-stop"  class="btn">Stop</button>
-                <span id="kar-status" class="karaoke-status"></span>
-                <button id="kar-enable" class="enable-audio">Habilitar audio</button>
-                <button id="kar-close" class="btn">Cerrar</button>
-              </div>
-            `;
-
-            const body = document.createElement('div');
-            body.className = 'bori-modal__body';
-            body.innerHTML = `
-              <div class="bori-modal__stage" style="color:#cfd2ff; font-size:13px; text-align:center; padding:0 16px;">
-                <div>
-                  <p style="opacity:.9">Disfruta la canción de Borí Cano. Si el audio no arranca, toca <strong>Habilitar audio</strong>.</p>
-                  <p style="opacity:.7">Puedes decir: “pausa”, “stop” o “cerrar”.</p>
-                </div>
-              </div>
-            `;
-
-            dlg.appendChild(bar);
-            dlg.appendChild(body);
-            document.body.appendChild(dlg);
-
-            // Wiring de botones
-            const audio = document.getElementById('background-audio');
-            const status = () => $('#kar-status');
-            const btnEnable = () => $('#kar-enable');
-
-            async function tryPlayFromUI(){
-              try{
-                await audio.play();
-                add($('.header-logo'),'pulsing');
-                add($('#lyrics-container'),'visible');
-                status().textContent = 'Reproduciendo';
-                btnEnable().style.display = 'none';
-              }catch(e){
-                status().textContent = 'Permiso de audio requerido';
-                btnEnable().style.display = '';
-              }
-            }
-            $('#kar-play').onclick  = tryPlayFromUI;
-            $('#kar-pause').onclick = ()=>{ audio.pause(); remove($('.header-logo'),'pulsing'); status().textContent='Pausado'; };
-            $('#kar-stop').onclick  = ()=>{ audio.pause(); audio.currentTime=0; remove($('.header-logo'),'pulsing'); remove($('#lyrics-container'),'visible'); status().textContent='Detenido'; };
-            $('#kar-enable').onclick= tryPlayFromUI;
-
-            $('#kar-close').onclick = ()=> dlg.close('user');
-            dlg.addEventListener('cancel', (e)=>{ e.preventDefault(); dlg.close('esc'); });
-
-            return dlg;
-          }
-
-          async function playKaraokeInternal(){
-            const dlg = ensureKaraokeModal();
-            if (!dlg.open && typeof dlg.showModal === 'function') dlg.showModal();
-
-            const audio = document.getElementById('background-audio');
-            try{
-              await audio.play();
-              add($('.header-logo'),'pulsing');
-              add($('#lyrics-container'),'visible');
-              $('#kar-status').textContent = 'Reproduciendo';
-              $('#kar-enable').style.display = 'none';
-              return { ok:true, state:'playing' };
-            }catch(e){
-              // Autoplay bloqueado: mostramos botón para el gesto del usuario
-              $('#kar-status').textContent = 'Permiso de audio requerido';
-              $('#kar-enable').style.display = '';
-              return { ok:false, error:'autoplay-blocked', needsGesture:true };
-            }
-          }
-
-          function openKaraokeInternal(){
-            const dlg = ensureKaraokeModal();
-            if (!dlg.open && typeof dlg.showModal === 'function') dlg.showModal();
-            $('#kar-status').textContent = 'Listo para reproducir';
-            return { ok:true, state:'opened' };
-          }
-
-          function pauseKaraokeInternal(){
-            const audio = document.getElementById('background-audio');
-            audio.pause();
-            remove($('.header-logo'),'pulsing');
-            $('#kar-status')?.textContent = 'Pausado';
-            return { ok:true, state:'paused' };
-          }
-
-          function stopKaraokeInternal(){
-            const audio = document.getElementById('background-audio');
-            audio.pause(); audio.currentTime = 0;
-            remove($('.header-logo'),'pulsing');
-            remove($('#lyrics-container'),'visible');
-            $('#kar-status')?.textContent = 'Detenido';
-            return { ok:true, state:'stopped' };
-          }
-
-          function closeKaraokeInternal(){
-            const dlg = document.getElementById('karaoke-dialog');
-            if (dlg?.open) dlg.close('tool');
-            return { ok:true, state:'closed' };
-          }
-
-          /* ====================== REGISTRO DE CLIENT TOOLS ====================== */
-          const safeTools = {
-            // Imágenes / Video (como ya tenías)
-            showImageModal: (args) => enqueue(()=> openImageModal(args || {})),
-            showimageModal: (args) => enqueue(()=> openImageModal(args || {})), // alias defensivo
-            showVideoModal: (args) => enqueue(()=> openVideoModal(args || {})),
-            closeImage:     () => enqueue(()=> closeImageModal('tool')),
-            closeVideo:     () => enqueue(()=> closeVideoModal('tool')),
-
-            // Karaoke (¡NUEVO!)
-            openKaraoke:  () => enqueue(()=> openKaraokeInternal()),
-            playKaraoke:  () => enqueue(()=> playKaraokeInternal()),
-            pauseKaraoke: () => enqueue(()=> pauseKaraokeInternal()),
-            stopKaraoke:  () => enqueue(()=> stopKaraokeInternal()),
-            closeKaraoke: () => enqueue(()=> closeKaraokeInternal()),
-
-            // Debug opcional
-            logMessage:   ({ message }) => { console.log('[logMessage]', message); return { ok:true }; },
+          /* ---------- Registro de Client Tools ---------- */
+          var safeTools = {
+            showImageModal: function (args){ return openImageModal(args || {}); },
+            showVideoModal: function (args){ return openVideoModal(args || {}); }
           };
 
           function registerNow(widget){
             try{
-              if (typeof widget.setConfig === 'function') {
-                widget.setConfig({ clientTools: { ...(widget.clientTools||{}), ...safeTools } });
-                console.log('[ClientTools] registrados via setConfig');
+              if (typeof widget.setConfig === "function") {
+                widget.setConfig({ clientTools: Object.assign({}, widget.clientTools || {}, safeTools) });
               } else {
-                widget.clientTools = { ...(widget.clientTools||{}), ...safeTools };
-                console.log('[ClientTools] registrados via propiedad clientTools');
+                widget.clientTools = Object.assign({}, widget.clientTools || {}, safeTools);
               }
-            }catch(e){ console.warn('[ClientTools] error setConfig:', e); }
+            }catch(e){
+              console.warn("register error", e);
+            }
           }
 
-          function tryRegisterClientTools(tries=0) {
-            const widget = document.querySelector('elevenlabs-convai');
-            if (!widget) { if (tries<40) setTimeout(()=>tryRegisterClientTools(tries+1), 250); return; }
+          function tryRegisterClientTools(tries){
+            tries = tries || 0;
+            var widget = document.querySelector("elevenlabs-convai");
+            if (!widget){
+              if (tries < 40) setTimeout(function(){ tryRegisterClientTools(tries + 1); }, 250);
+              return;
+            }
             registerNow(widget);
 
             // Reinyectar en cada call (por si el widget reinstancia la config)
-            window.addEventListener('elevenlabs-convai:call', (ev) => {
-              const cfg = ev?.detail?.config || {};
-              cfg.clientTools = { ...(cfg.clientTools||{}), ...safeTools };
+            window.addEventListener("elevenlabs-convai:call", function(ev){
+              var cfg = (ev && ev.detail && ev.detail.config) || {};
+              cfg.clientTools = Object.assign({}, cfg.clientTools || {}, safeTools);
               ev.detail.config = cfg;
             });
           }
 
-          if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', tryRegisterClientTools);
+          if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", tryRegisterClientTools);
           } else {
             tryRegisterClientTools();
           }
 
-          // Exponer para pruebas manuales en consola
-          window.__bori = {
-            showImage: (args)=> enqueue(()=> openImageModal(args||{})),
-            showVideo: (args)=> enqueue(()=> openVideoModal(args||{})),
-            karOpen:   ()=> enqueue(()=> openKaraokeInternal()),
-            karPlay:   ()=> enqueue(()=> playKaraokeInternal()),
-            karPause:  ()=> enqueue(()=> pauseKaraokeInternal()),
-            karStop:   ()=> enqueue(()=> stopKaraokeInternal()),
-            karClose:  ()=> enqueue(()=> closeKaraokeInternal()),
-          };
+          // Exponer helpers para pruebas manuales desde consola
+          window.__boriShowImg = openImageModal;
+          window.__boriShowVid = openVideoModal;
         })();
       </script>
     </main>
 
-    <!-- Audio de fondo (pista del karaoke) -->
+    <!-- Audio de fondo -->
     <audio id="background-audio" src="https://static.wixstatic.com/mp3/86b1c8_a1bd589ba7e547dc8a7a4cd761c40135.mp3" preload="auto"></audio>
 
-    <!-- Karaoke + Play/Pause manual (tu UX existente) -->
+    <!-- Karaoke + Play/Pause -->
     <script>
       (function () {
-        const playPauseButton = document.getElementById("play-pause-button");
-        const audio = document.getElementById("background-audio");
-        const logo = document.querySelector(".header-logo");
-        const lyricsContainer = document.getElementById("lyrics-container");
+        "use strict";
+        var playPauseButton = document.getElementById("play-pause-button");
+        var audio = document.getElementById("background-audio");
+        var logo = document.querySelector(".header-logo");
+        var lyricsContainer = document.getElementById("lyrics-container");
 
-        // KARAOKE LYRICS DATA
-        const lyricsData = [
+        var lyricsData = [
           { stanza: 0, time: 0.16, text: "Desde el balcón de Vista Pelícano," },
           { stanza: 0, time: 1.16, text: "mirando el mar azulito," },
           { stanza: 0, time: 3.03, text: "llenando la neverita desde bien tempranito." },
@@ -511,12 +381,12 @@
           { stanza: 9, time: 112.0, text: "" }
         ];
 
-        let currentLyricIndex = -1;
+        var currentLyricIndex = -1;
 
         function updateLyrics() {
-          const currentTime = audio.currentTime;
-          let newLyricIndex = -1;
-          for (let i = 0; i < lyricsData.length; i++) {
+          var currentTime = audio.currentTime;
+          var newLyricIndex = -1;
+          for (var i = 0; i < lyricsData.length; i++) {
             if (currentTime >= lyricsData[i].time) newLyricIndex = i;
             else break;
           }
@@ -525,16 +395,16 @@
             lyricsContainer.innerHTML = "";
             if (currentLyricIndex < 0) return;
 
-            const make = (line, active) => {
-              const p = document.createElement("p");
+            function make(line, active){
+              var p = document.createElement("p");
               p.textContent = line.text;
               p.className = "lyric-line" + (active ? " active" : "");
               return p;
-            };
-            const cur = lyricsData[currentLyricIndex];
+            }
+            var cur = lyricsData[currentLyricIndex];
             if (cur && cur.text) {
               lyricsContainer.appendChild(make(cur, true));
-              const next = lyricsData[currentLyricIndex + 1];
+              var next = lyricsData[currentLyricIndex + 1];
               if (next && next.stanza === cur.stanza && next.text)
                 lyricsContainer.appendChild(make(next, false));
             }
@@ -542,14 +412,14 @@
         }
 
         if (playPauseButton && audio && logo && lyricsContainer) {
-          const playIconSVG  = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
-          const pauseIconSVG = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+          var playIconSVG  = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+          var pauseIconSVG = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
 
           playPauseButton.innerHTML = playIconSVG;
 
-          const togglePlayPause = () => {
+          function togglePlayPause(){
             if (audio.paused) {
-              audio.play().catch((err) => console.error("Audio error:", err));
+              audio.play().catch(function(err){ console.error("Audio error:", err); });
               playPauseButton.innerHTML = pauseIconSVG;
               playPauseButton.classList.add("playing");
               playPauseButton.setAttribute("aria-label", "Pausar música");
@@ -563,11 +433,11 @@
               logo.classList.remove("pulsing");
               lyricsContainer.classList.remove("visible");
             }
-          };
+          }
 
           playPauseButton.addEventListener("click", togglePlayPause);
           audio.addEventListener("timeupdate", updateLyrics);
-          audio.addEventListener("ended", () => {
+          audio.addEventListener("ended", function(){
             playPauseButton.innerHTML = playIconSVG;
             playPauseButton.classList.remove("playing");
             playPauseButton.setAttribute("aria-label", "Reproducir música");
@@ -581,6 +451,6 @@
       })();
     </script>
 
-    <div class="version-label">V3.9.0</div>
+    <div class="version-label">V3.8.0</div>
   </body>
 </html>
