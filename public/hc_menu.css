@@ -1,0 +1,280 @@
+:root {
+  --bg: #0b0b12;
+  --ink: #fff;
+  --muted: #cbd5e1;
+  --accent: #5c3d99;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body.hc-menu {
+  margin: 0;
+  color: var(--ink);
+  background: var(--bg);
+  font-family: Poppins, system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+}
+
+/* Hero Section */
+.hero {
+  position: relative;
+  min-height: 38svh;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  overflow: hidden;
+}
+
+.hero__bg {
+  position: absolute;
+  inset: 0;
+  background: url("assets/harbor-cafe-collage.webp") center/cover no-repeat;
+  filter: blur(10px) saturate(0.9) brightness(0.55);
+  transform: scale(1.06);
+}
+
+.hero__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.6));
+}
+
+.hero__content {
+  position: relative;
+  padding: 3rem 1rem;
+  z-index: 1;
+}
+
+.hero h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  margin: 0 0 0.25rem;
+  letter-spacing: -0.02em;
+}
+
+.hero p {
+  color: var(--muted);
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+/* Category Navigation */
+.cat-nav {
+  position: sticky;
+  top: 0;
+  background: rgba(11, 11, 18, 0.75);
+  backdrop-filter: saturate(1.2) blur(8px);
+  padding: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 10;
+  scrollbar-width: none;
+}
+
+.cat-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  white-space: nowrap;
+  padding: 0.5rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  background: transparent;
+}
+
+.chip:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.chip[aria-current="true"],
+.chip:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: color-mix(in oklab, var(--accent) 20%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent) 60%, transparent);
+}
+
+/* Container */
+.container {
+  width: min(1000px, 92vw);
+  margin-inline: auto;
+  padding: 2rem 0 6rem;
+}
+
+/* Menu Sections */
+.menu-section {
+  scroll-margin-top: 5rem;
+  margin: 2.5rem 0;
+}
+
+.menu-section h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0 0 0.75rem;
+  color: #fff;
+  border-left: 4px solid var(--accent);
+  padding-left: 0.5rem;
+  letter-spacing: -0.01em;
+}
+
+/* Menu List */
+.menu-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.menu-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 0.8rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  transition: background 0.2s ease;
+}
+
+.menu-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.menu-item span:first-child {
+  font-size: 0.95rem;
+}
+
+.menu-item .price {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--accent);
+  text-align: right;
+}
+
+/* Responsive Grid for Desktop */
+@media (min-width: 800px) {
+  .menu-list {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+  
+  .hero h1 {
+    font-size: 2.8rem;
+  }
+}
+
+/* Bottom CTA */
+.bottom-cta {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  padding: 0.75rem;
+  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.65) 25%, rgba(0, 0, 0, 0.85));
+  backdrop-filter: blur(6px);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  z-index: 9;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1rem;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn.primary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+}
+
+.btn.primary:hover {
+  background: color-mix(in oklab, var(--accent) 85%, white);
+  transform: translateY(-1px);
+}
+
+.btn.outline {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  background: transparent;
+}
+
+.btn.outline:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  html {
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .hero,
+  .cat-nav,
+  .bottom-cta {
+    display: none;
+  }
+  
+  body.hc-menu {
+    color: #000;
+    background: #fff;
+  }
+  
+  .menu-item {
+    background: #fff;
+    border: 0;
+    padding: 0.3rem 0;
+    border-bottom: 1px dotted #ccc;
+  }
+  
+  .menu-section {
+    margin: 0 0 1.2rem;
+    page-break-inside: avoid;
+  }
+  
+  .menu-section h2 {
+    color: #000;
+    border-left-color: #000;
+    font-size: 1.2rem;
+  }
+  
+  .menu-item .price {
+    color: #000;
+  }
+  
+  .container {
+    padding: 0;
+  }
+}
